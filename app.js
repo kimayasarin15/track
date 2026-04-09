@@ -45,19 +45,16 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 // ─── SHAPE MODEL ─────────────────────────────────────────────────────────────
-// Shapes now store geometry explicitly rather than just a centre + size.
+// Shapes store geometry explicitly rather than just a centre + size.
 // rect:   { type, color, x1, y1, x2, y2 }   (normalised 0-1 coords)
 // circle: { type, color, cx, cy, r }         (normalised)
 // line:   { type, color, x1, y1, x2, y2 }   (normalised)
-// The pivot point used for animation is the centre of the bounding box.
 
 function shapeCentre(shape) {
   if (shape.type === 'circle') return { x: shape.cx, y: shape.cy };
   return { x: (shape.x1 + shape.x2) / 2, y: (shape.y1 + shape.y2) / 2 };
 }
 
-// Draw a shape onto any canvas context, offset by (dx, dy) from its original
-// normalised position. dx/dy are pixel deltas.
 function drawShapeCtx(offCtx, shape, W, H, dx, dy) {
   offCtx.save();
   offCtx.fillStyle = shape.color;
@@ -90,17 +87,14 @@ function drawShapeCtx(offCtx, shape, W, H, dx, dy) {
   offCtx.restore();
 }
 
-// Convenience wrapper for main canvas
 function drawShape(shape, dx, dy) {
   drawShapeCtx(ctx, shape, canvas.width, canvas.height, dx, dy);
 }
 
-// Draw ghost preview while dragging
 function drawGhost(shape) {
   ctx.save();
   ctx.globalAlpha = 0.5;
   drawShape(shape, 0, 0);
-  // dashed bounding box hint
   ctx.globalAlpha = 0.4;
   ctx.strokeStyle = '#4a6cf7';
   ctx.lineWidth = 1;
@@ -154,7 +148,6 @@ function drawFrame(pct) {
       const centre = shapeCentre(layer.shape);
       const pos = getPositionAtTime(layer.animation, t);
       if (!pos) continue;
-      // delta from original centre to animated position
       dx = (pos.x - centre.x) * canvas.width;
       dy = (pos.y - centre.y) * canvas.height;
     }
@@ -198,11 +191,11 @@ function setAppMode(mode) {
   if (mode === 'draw') {
     modeToggle.classList.remove('record-mode');
     modeToggleLabel.textContent = 'DRAW';
-    setStatus('Draw mode — drag on the canvas to place a shape on the active layer');
+    setStatus('Draw mode — drag on the canvas to place a shape, or click an existing shape to edit it');
   } else {
     modeToggle.classList.add('record-mode');
     modeToggleLabel.textContent = 'RECORD';
-    setStatus('Record mode — press REC then move your mouse to record motion');
+    setStatus('Record mode — click a shape to edit it, or press REC to record motion');
   }
   updateCursor();
 }
@@ -249,7 +242,6 @@ document.getElementById('add-layer-btn').addEventListener('click', () => {
 
 // ─── SHAPE HIT TEST ───────────────────────────────────────────────────────────
 function hitTestShape(shape, px, py) {
-  // px, py are normalised 0-1 canvas coords
   if (!shape) return false;
   const W = canvas.width, H = canvas.height;
   if (shape.type === 'rect') {
@@ -259,7 +251,6 @@ function hitTestShape(shape, px, py) {
     const dx = (px - shape.cx) * W, dy = (py - shape.cy) * H;
     return Math.hypot(dx, dy) <= shape.r * Math.min(W, H);
   } else if (shape.type === 'line') {
-    // distance from point to line segment, with ~12px tolerance
     const x1 = shape.x1*W, y1 = shape.y1*H, x2 = shape.x2*W, y2 = shape.y2*H;
     const mx = px*W, my = py*H;
     const len2 = (x2-x1)**2 + (y2-y1)**2;
@@ -276,27 +267,28 @@ const inspColor    = document.getElementById('insp-color');
 const inspColorPrev= document.getElementById('insp-color-preview');
 const inspSize     = document.getElementById('insp-size');
 const inspSizeVal  = document.getElementById('insp-size-val');
-let   inspecting   = false; // whether inspector is open
+let   inspecting   = false;
 
 function openInspector(shape, anchorX, anchorY) {
   inspecting = true;
   inspColor.value = shape.color;
   inspColorPrev.style.background = shape.color;
 
-  // Size: use a scale factor stored on shape (default 1.0)
   if (shape.scale == null) shape.scale = 1.0;
   const pct = Math.round(shape.scale * 100);
   inspSize.value = pct;
   inspSizeVal.textContent = pct + '%';
 
-  // Position near click but keep on screen
-  const area = canvasArea.getBoundingClientRect();
+  // Position near click. anchorX/Y are relative to canvas-area,
+  // which is the inspector's offset parent (position:relative).
   const iW = 236, iH = 180;
+  const areaW = canvasArea.clientWidth, areaH = canvasArea.clientHeight;
   let left = anchorX + 12;
   let top  = anchorY - 20;
-  if (left + iW > area.width)  left = anchorX - iW - 12;
-  if (top  + iH > area.height) top  = area.height - iH - 8;
-  if (top < 4) top = 4;
+  if (left + iW > areaW)  left = anchorX - iW - 12;
+  if (top  + iH > areaH) top  = areaH - iH - 8;
+  if (top  < 4)  top  = 4;
+  if (left < 4)  left = 4;
   inspector.style.left = left + 'px';
   inspector.style.top  = top  + 'px';
   inspector.classList.add('visible');
@@ -327,7 +319,6 @@ inspSize.addEventListener('input', e => {
 
 document.getElementById('insp-close').addEventListener('click', closeInspector);
 
-// Scale a shape around its centre
 function applyScale(shape, newScale) {
   if (shape.scale == null) shape.scale = 1.0;
   const ratio = newScale / shape.scale;
@@ -349,7 +340,7 @@ function applyScale(shape, newScale) {
   }
 }
 
-// Close inspector when clicking outside it
+// Close inspector when clicking outside it (canvas clicks handled separately below)
 document.addEventListener('mousedown', e => {
   if (inspecting && !inspector.contains(e.target) && e.target !== canvas) {
     closeInspector();
@@ -389,25 +380,40 @@ function buildShapeFromDrag(start, end) {
 
 canvas.addEventListener('mousedown', e => {
   if (isRecording || isPlaying) return;
-  if (appMode !== 'draw') return;
 
   const pos = canvasPos(e);
 
-  // Check if clicking on the active layer's shape
+  // ── Shape click → open inspector (works in BOTH draw and record mode) ──
+  // This check comes BEFORE the mode guard so you can always click a shape
+  // to edit it, regardless of which mode you're in.
   const layer = layers[activeLayer];
-  if (layer.shape && hitTestShape(layer.shape, pos.x, pos.y)) {
+  if (!isDrawing && layer.shape && hitTestShape(layer.shape, pos.x, pos.y)) {
     const r = canvas.getBoundingClientRect();
+    // Coordinates relative to canvas-area (inspector's offset parent)
     openInspector(layer.shape, e.clientX - r.left, e.clientY - r.top);
     return;
   }
 
-  // Otherwise start drawing
+  // ── Only start a new drawing stroke in draw mode ──
+  if (appMode !== 'draw') return;
+
   if (inspecting) { closeInspector(); return; }
   isDrawing = true;
   drawStart = pos;
 });
 
 canvas.addEventListener('mousemove', e => {
+  // ── Hover cursor: show pointer when hovering over a clickable shape ──
+  if (!isDrawing && !isRecording && !isPlaying) {
+    const hPos = canvasPos(e);
+    const hLayer = layers[activeLayer];
+    if (hLayer.shape && hitTestShape(hLayer.shape, hPos.x, hPos.y)) {
+      canvas.style.cursor = 'pointer';
+    } else {
+      updateCursor();
+    }
+  }
+
   if (appMode === 'draw' && isDrawing && drawStart) {
     const cur = canvasPos(e);
     const ghost = buildShapeFromDrag(drawStart, cur);
@@ -422,13 +428,12 @@ canvas.addEventListener('mousemove', e => {
     let x = (e.clientX - r.left) / canvas.width;
     let y = (e.clientY - r.top)  / canvas.height;
 
-    // Shift: constrain to horizontal or vertical axis from recording start
     if (e.shiftKey && recordedPath.length > 0) {
       const origin = recordedPath[0];
       const dx = Math.abs(x - origin.x);
       const dy = Math.abs(y - origin.y);
-      if (dx >= dy) y = origin.y; // lock to horizontal
-      else          x = origin.x; // lock to vertical
+      if (dx >= dy) y = origin.y;
+      else          x = origin.x;
     }
 
     const t = performance.now();
@@ -437,7 +442,6 @@ canvas.addEventListener('mousemove', e => {
     recordedPath.push({ t: elapsed, x, y });
 
     drawFrame(0);
-    // live position of shape
     const layer = layers[activeLayer];
     if (layer.shape) {
       const centre = shapeCentre(layer.shape);
@@ -445,7 +449,6 @@ canvas.addEventListener('mousemove', e => {
       const dy = (y - centre.y) * canvas.height;
       drawShape(layer.shape, dx, dy);
     }
-    // trail
     if (recordedPath.length > 1) {
       ctx.save();
       ctx.strokeStyle = 'rgba(74,108,247,0.25)';
@@ -470,7 +473,6 @@ canvas.addEventListener('mouseup', e => {
   drawStart = null;
   if (!shape) return;
 
-  // Check it has some minimum size
   const tooSmall = (shape.type === 'circle' && shape.r * Math.min(canvas.width, canvas.height) < 4) ||
                    (shape.type !== 'circle' && Math.abs(shape.x2 - shape.x1) * canvas.width < 4 &&
                     Math.abs(shape.y2 - shape.y1) * canvas.height < 4);
@@ -482,14 +484,12 @@ canvas.addEventListener('mouseup', e => {
   drawFrame(playheadPct);
   checkExportReady();
 
-  // Auto-switch to record mode
   setAppMode('record');
-  setStatus(`Shape drawn on Layer ${activeLayer+1}. Press REC to record its motion.`);
+  setStatus(`Shape drawn on Layer ${activeLayer+1}. Click the shape to change its color or size, or press REC to record motion.`);
 });
 
 canvas.addEventListener('mouseleave', e => {
   if (isDrawing) {
-    // commit whatever is drawn so far
     isDrawing = false;
     const end = canvasPos(e);
     const shape = buildShapeFromDrag(drawStart || end, end);
@@ -504,6 +504,7 @@ canvas.addEventListener('mouseleave', e => {
     drawFrame(playheadPct);
   }
   if (appMode === 'record' && isRecording && recordedPath.length > 5) stopRecording();
+  updateCursor();
 });
 
 // ─── RECORDING ────────────────────────────────────────────────────────────────
@@ -587,7 +588,6 @@ function startPlayback() {
   if (!hasAny) { setStatus('No animations recorded yet.'); return; }
   isPlaying = true;
   recordDuration = parseInt(document.getElementById('duration-select').value);
-  // Update play icon to pause
   playBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
     <rect x="2" y="1" width="4" height="12" rx="1" fill="#ccc"/>
     <rect x="8" y="1" width="4" height="12" rx="1" fill="#ccc"/>
@@ -630,7 +630,6 @@ function setPlayhead(pct) {
   playheadPct = pct;
   timelineFilled.style.width = (pct * 100) + '%';
   timelineHead.style.left = (pct * 100) + '%';
-  // update time display
   const secs = Math.round(pct * recordDuration);
   const m = String(Math.floor(secs/60)).padStart(2,'0');
   const s = String(secs%60).padStart(2,'0');
@@ -643,7 +642,6 @@ document.getElementById('duration-select').addEventListener('change', e => {
   const s = String(recordDuration%60).padStart(2,'0');
   timeEnd.textContent = `${m}:${s}`;
 });
-// init
 timeEnd.textContent = '00:05';
 
 timelineTrack.addEventListener('mousedown', e => {
@@ -671,6 +669,12 @@ document.addEventListener('keydown', e => {
 
   if (e.key === 'r' || e.key === 'R') recBtn.click();
 
+  // Escape closes the inspector
+  if (e.key === 'Escape' && inspecting) {
+    closeInspector();
+    return;
+  }
+
   if (e.key === 'Delete' || e.key === 'Backspace') {
     if (isRecording || isPlaying || isDrawing) return;
     const layer = layers[activeLayer];
@@ -690,6 +694,7 @@ document.addEventListener('keydown', e => {
     }
   }
 });
+
 function setStatus(msg) {
   document.getElementById('status').textContent = msg;
 }
@@ -700,336 +705,172 @@ function checkExportReady() {
   document.getElementById('export-btn').disabled = !hasAny;
 }
 
-document.getElementById('export-btn').addEventListener('click', exportMP4);
+const exportBtn = document.getElementById('export-btn');
+const modal = document.getElementById('modal');
+const modalProgress = document.getElementById('modal-progress');
+const modalStatus = document.getElementById('modal-status');
+let exportCancelled = false;
 
-function setModalStatus(msg) {
-  document.getElementById('modal-status').textContent = msg;
-}
-
-async function exportMP4() {
-  const modal   = document.getElementById('modal');
-  const progress = document.getElementById('modal-progress');
+exportBtn.addEventListener('click', async () => {
+  if (exportBtn.disabled) return;
   modal.classList.add('visible');
-  progress.style.width = '0%';
-  setModalStatus('Preparing…');
+  exportCancelled = false;
+  modalProgress.style.width = '0%';
+  modalStatus.textContent = '';
 
-  let cancelled = false;
-  document.getElementById('modal-cancel').onclick = () => {
-    cancelled = true;
-    modal.classList.remove('visible');
-  };
-
-
-// ── Try WebCodecs path (Chrome 94+, Edge 94+) ─────────────────────────────
-  if (typeof VideoEncoder !== 'undefined') {
-    try {
-      await exportViaWebCodecs(modal, progress, () => cancelled, setModalStatus);
-      return;
-    } catch(e) {
-      console.warn('WebCodecs failed, trying MediaRecorder fallback:', e);
-    }
-  }
-
-  // ── MediaRecorder fallback (Firefox, Safari) ───────────────────────────────
-  try {
-    await exportViaMediaRecorder(modal, progress, () => cancelled, setModalStatus);
-  } catch(err) {
-    console.error(err);
-    modal.classList.remove('visible');
-    setStatus('Export failed: ' + err.message);
-  }
-}
-
-// ── WebCodecs path → real H.264 MP4 ──────────────────────────────────────────
-async function exportViaWebCodecs(modal, progress, isCancelled, setStatus2) {
   const W = canvas.width, H = canvas.height;
-  // Width/height must be even for H.264
-  const EW = W % 2 === 0 ? W : W - 1;
-  const EH = H % 2 === 0 ? H : H - 1;
+  const totalFrames = Math.round(recordDuration * FPS);
 
-  setStatus2('Encoding H.264…');
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = W; offCanvas.height = H;
+  const offCtx = offCanvas.getContext('2d');
 
+  const stream = offCanvas.captureStream(FPS);
+  const recorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
   const chunks = [];
-  let encoderConfig = null;
-
-  const encoder = new VideoEncoder({
-    output: (chunk, meta) => {
-      if (meta && meta.decoderConfig) encoderConfig = meta.decoderConfig;
-      const buf = new Uint8Array(chunk.byteLength);
-      chunk.copyTo(buf);
-      chunks.push({ data: buf, type: chunk.type, ts: chunk.timestamp, duration: chunk.duration });
-    },
-    error: e => { throw e; }
-  });
-
-  encoder.configure({
-    codec: 'avc1.42001f',         // H.264 Baseline Profile Level 3.1
-    width: EW, height: EH,
-    bitrate: 4_000_000,
-    framerate: FPS,
-    latencyMode: 'quality',
-  });
-
-  const totalFrames = Math.ceil(recordDuration * FPS);
-  const offscreen = document.createElement('canvas');
-  offscreen.width = EW; offscreen.height = EH;
-  const offCtx = offscreen.getContext('2d');
-
-  for (let frame = 0; frame <= totalFrames; frame++) {
-    if (isCancelled()) { encoder.close(); return; }
-
-    const pct = frame / totalFrames;
-    const t   = pct * recordDuration;
-
-    offCtx.fillStyle = '#ffffff';
-    offCtx.fillRect(0, 0, EW, EH);
-    renderLayersToCtx(offCtx, EW, EH, t);
-
-    const vf = new VideoFrame(offscreen, {
-      timestamp: (frame / FPS) * 1_000_000,
-      duration:  (1 / FPS)    * 1_000_000,
-    });
-    encoder.encode(vf, { keyFrame: frame % (FPS * 2) === 0 });
-    vf.close();
-
-    progress.style.width = ((frame / totalFrames) * 75) + '%';
-    if (frame % 5 === 0) {
-      setStatus2(`Encoding frame ${frame}/${totalFrames}`);
-      await new Promise(r => setTimeout(r, 0));
-    }
-  }
-
-  await encoder.flush();
-  encoder.close();
-
-  if (isCancelled()) return;
-  setStatus2('Muxing MP4…');
-  progress.style.width = '85%';
-
-  // Build a minimal MP4 (ftyp + moov + mdat) around the raw AVC chunks
-  const mp4 = muxAvcToMp4(chunks, EW, EH, FPS, encoderConfig);
-
-  progress.style.width = '100%';
-  setStatus2('Done!');
-
-  const blob = new Blob([mp4], { type: 'video/mp4' });
-  triggerDownload(blob, 'motion-export.mp4');
-  setTimeout(() => modal.classList.remove('visible'), 600);
-  setStatus('✓ Saved motion-export.mp4');
-}
-
-// ── Minimal AVC → MP4 muxer ──────────────────────────────────────────────────
-function muxAvcToMp4(chunks, W, H, fps, decoderConfig) {
-  const w32 = v => new Uint8Array([(v>>>24)&0xff,(v>>>16)&0xff,(v>>>8)&0xff,v&0xff]);
-  const w16 = v => new Uint8Array([(v>>>8)&0xff, v&0xff]);
-  const cat = (...parts) => { const t=[]; for(const p of parts) t.push(...p); return new Uint8Array(t); };
-  const s2b = s => new Uint8Array([...s].map(c=>c.charCodeAt(0)));
-
-  function box(name, ...payloads) {
-    const body = cat(...payloads);
-    const size = 8 + body.length;
-    return cat(w32(size), s2b(name), body);
-  }
-  function fullbox(name, ver, flags, ...payloads) {
-    return box(name, new Uint8Array([ver,(flags>>16)&0xff,(flags>>8)&0xff,flags&0xff]), ...payloads);
-  }
-
-  // Build mdat
-  const mdatBody = cat(...chunks.map(c => c.data));
-  const mdat = cat(w32(8 + mdatBody.length), s2b('mdat'), mdatBody);
-
-  // Sample table data
-  const sampleSizes    = new Uint8Array(4 * chunks.length);
-  const syncSamples    = [];
-  let offset32 = new DataView(sampleSizes.buffer);
-  for (let i=0;i<chunks.length;i++) {
-    offset32.setUint32(i*4, chunks[i].data.length);
-    if (chunks[i].type === 'key') syncSamples.push(i+1);
-  }
-
-  const timescale = 90000;
-  const frameDur  = Math.round(timescale / fps);
-  const totalDur  = frameDur * chunks.length;
-
-  // stts: all frames same duration
-  const stts = fullbox('stts',0,0,
-    w32(1), w32(chunks.length), w32(frameDur)
-  );
-  // stss: sync (key) samples
-  const stssEntries = new Uint8Array(4*syncSamples.length);
-  const ssv = new DataView(stssEntries.buffer);
-  syncSamples.forEach((n,i)=>ssv.setUint32(i*4,n));
-  const stss = fullbox('stss',0,0, w32(syncSamples.length), stssEntries);
-  // stsc: 1 chunk with all samples
-  const stsc = fullbox('stsc',0,0, w32(1), w32(1), w32(chunks.length), w32(1));
-  // stsz
-  const stsz = fullbox('stsz',0,0, w32(0), w32(chunks.length), sampleSizes);
-  // stco placeholder — patched below
-  const stcoPayload = cat(w32(1), w32(0xDEADBEEF));
-  const stco = fullbox('stco',0,0, stcoPayload);
-
-  // avcC — try to extract from decoderConfig, else use a generic one
-  let avcC;
-  if (decoderConfig && decoderConfig.description) {
-    const desc = decoderConfig.description;
-    const raw  = desc instanceof ArrayBuffer ? new Uint8Array(desc)
-               : desc.buffer ? new Uint8Array(desc.buffer, desc.byteOffset, desc.byteLength)
-               : null;
-    if (raw) {
-      avcC = cat(w32(8+raw.length), s2b('avcC'), raw);
-    }
-  }
-  if (!avcC) {
-    // Baseline 3.1 generic avcC
-    const avcCData = new Uint8Array([
-      0x01, 0x42, 0x00, 0x1f, 0xff, 0xe1, 0x00, 0x00, 0x01, 0x00, 0x00
-    ]);
-    avcC = cat(w32(8+avcCData.length), s2b('avcC'), avcCData);
-  }
-
-  // avc1 sample entry (86 bytes fixed + avcC)
-  const avc1 = box('avc1',
-    new Uint8Array(6),              // reserved
-    w16(1),                         // data ref index
-    new Uint8Array(16),             // pre-defined + reserved
-    w16(W), w16(H),
-    new Uint8Array([0,0x48,0,0, 0,0x48,0,0]), // 72dpi x2
-    new Uint8Array(4),              // reserved
-    w16(1),                         // frame count
-    new Uint8Array(32),             // compressor name
-    w16(0x18),                      // depth
-    new Uint8Array([0xff,0xff]),     // pre-defined
-    avcC
-  );
-
-  const stsd  = fullbox('stsd',0,0, w32(1), avc1);
-  const stbl  = box('stbl', stsd, stts, stss, stsc, stsz, stco);
-  const url   = fullbox('url ',0,1);
-  const dref  = fullbox('dref',0,0, w32(1), url);
-  const dinf  = box('dinf', dref);
-  const vmhd  = fullbox('vmhd',0,1, w16(0), new Uint8Array(6));
-  const minf  = box('minf', vmhd, dinf, stbl);
-  const hdlr  = fullbox('hdlr',0,0, w32(0), s2b('vide'), w32(0),w32(0),w32(0), s2b('Video\0'));
-  const mdhd  = fullbox('mdhd',0,0, w32(0),w32(0), w32(timescale), w32(totalDur), w16(0x55c4),w16(0));
-  const mdia  = box('mdia', mdhd, hdlr, minf);
-  const tkhd  = fullbox('tkhd',0,3,
-    w32(0),w32(0), w32(1), w32(0), w32(totalDur),
-    new Uint8Array(8), w16(0),w16(0),w16(0x0100),w16(0), w32(0),
-    w32(0x00010000),w32(0),w32(0), w32(0),w32(0x00010000),w32(0), w32(0),w32(0),w32(0x40000000),
-    w32(W<<16), w32(H<<16)
-  );
-  const trak  = box('trak', tkhd, mdia);
-  const mvhd  = fullbox('mvhd',0,0,
-    w32(0),w32(0), w32(timescale), w32(totalDur),
-    w32(0x00010000),w16(0x0100),new Uint8Array(10),
-    w32(0x00010000),w32(0),w32(0), w32(0),w32(0x00010000),w32(0), w32(0),w32(0),w32(0x40000000),
-    new Uint8Array(24), w32(2)
-  );
-  const moov  = box('moov', mvhd, trak);
-
-  // ftyp
-  const ftyp = box('ftyp', s2b('mp42'), w32(0), s2b('mp42'), s2b('isom'), s2b('avc1'));
-
-  // Calculate mdat offset and patch stco
-  const mdatOffset = ftyp.length + moov.length;
-  const moovMut    = new Uint8Array(moov);
-  // Find 0xDEADBEEF in moov and replace with real offset
-  const deadBeef = [0xDE,0xAD,0xBE,0xEF];
-  for (let i=0;i<moovMut.length-4;i++) {
-    if (moovMut[i]===0xDE&&moovMut[i+1]===0xAD&&moovMut[i+2]===0xBE&&moovMut[i+3]===0xEF) {
-      const real = mdatOffset + 8;
-      moovMut[i]  =(real>>>24)&0xff; moovMut[i+1]=(real>>>16)&0xff;
-      moovMut[i+2]=(real>>>8)&0xff;  moovMut[i+3]=real&0xff;
-      break;
-    }
-  }
-
-  const out = new Uint8Array(ftyp.length + moovMut.length + mdat.length);
-  out.set(ftyp, 0);
-  out.set(moovMut, ftyp.length);
-  out.set(mdat, ftyp.length + moovMut.length);
-  return out;
-}
-
-// ── MediaRecorder fallback → WebM download (renamed .mp4 for convenience) ────
-async function exportViaMediaRecorder(modal, progress, isCancelled, setStatus2) {
-  const W = canvas.width, H = canvas.height;
-  const offscreen = document.createElement('canvas');
-  offscreen.width = W; offscreen.height = H;
-  const offCtx = offscreen.getContext('2d');
-
-  setStatus2('Recording frames…');
-
-  const stream = offscreen.captureStream(FPS);
-  const chunks = [];
-  let mimeType = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm']
-    .find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
-
-  const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
   recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
 
-  recorder.start(100);
+  recorder.start();
 
-  const totalFrames = Math.ceil(recordDuration * FPS);
-  for (let frame = 0; frame <= totalFrames; frame++) {
-    if (isCancelled()) { recorder.stop(); return; }
+  for (let f = 0; f <= totalFrames; f++) {
+    if (exportCancelled) { recorder.stop(); modal.classList.remove('visible'); return; }
+    const pct = f / totalFrames;
+    const t = pct * recordDuration;
 
-    const pct = frame / totalFrames;
-    const t   = pct * recordDuration;
-
+    offCtx.clearRect(0, 0, W, H);
     offCtx.fillStyle = '#ffffff';
     offCtx.fillRect(0, 0, W, H);
-    renderLayersToCtx(offCtx, W, H, t);
 
-    progress.style.width = ((frame / totalFrames) * 90) + '%';
-    if (frame % 5 === 0) setStatus2(`Frame ${frame}/${totalFrames}`);
-    await new Promise(r => setTimeout(r, 1000 / FPS));
-  }
-
-  await new Promise(resolve => {
-    recorder.onstop = resolve;
-    recorder.stop();
-  });
-
-  if (isCancelled()) return;
-  progress.style.width = '100%';
-  setStatus2('Done!');
-
-  const blob = new Blob(chunks, { type: mimeType });
-  triggerDownload(blob, 'motion-export.webm');
-  setTimeout(() => modal.classList.remove('visible'), 600);
-  setStatus('✓ Saved motion-export.webm (open in VLC or convert with HandBrake)');
-}
-
-function triggerDownload(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a   = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-}
-
-// ─── SHARED RENDER HELPER ────────────────────────────────────────────────────
-function renderLayersToCtx(offCtx, W, H, t) {
-  for (let i = 0; i < layers.length; i++) {
-    const layer = layers[i];
-    if (!layer.shape) continue;
-    let dx = 0, dy = 0;
-    if (layer.animation && layer.animation.length > 0) {
+    for (let i = 0; i < layers.length; i++) {
+      const layer = layers[i];
+      if (!layer.shape || !layer.animation) continue;
       const centre = shapeCentre(layer.shape);
       const pos = getPositionAtTime(layer.animation, t);
       if (!pos) continue;
-      dx = (pos.x - centre.x) * W;
-      dy = (pos.y - centre.y) * H;
+      const dx = (pos.x - centre.x) * W;
+      const dy = (pos.y - centre.y) * H;
+      drawShapeCtx(offCtx, layer.shape, W, H, dx, dy);
     }
-    drawShapeCtx(offCtx, layer.shape, W, H, dx, dy);
+
+    modalProgress.style.width = (pct * 100) + '%';
+    modalStatus.textContent = `Frame ${f} / ${totalFrames}`;
+    await new Promise(r => setTimeout(r, 1000 / FPS));
+  }
+
+  recorder.stop();
+  await new Promise(r => recorder.onstop = r);
+
+  if (exportCancelled) { modal.classList.remove('visible'); return; }
+
+  const blob = new Blob(chunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'motion.webm'; a.click();
+  URL.revokeObjectURL(url);
+  modal.classList.remove('visible');
+});
+
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  exportCancelled = true;
+  modal.classList.remove('visible');
+});
+
+// ─── HELP / INFO MODAL ────────────────────────────────────────────────────────
+const HELP_STEPS = [
+  {
+    title: 'Add a shape',
+    body: 'Select a shape type (circle, square, or line) from the toolbar and choose a colour. Drag on the canvas to draw it — it will appear on the active layer.',
+  },
+  {
+    title: 'Select your layer',
+    body: 'Click a layer tab at the bottom to make it active. Each layer holds one shape and one recorded motion path.',
+  },
+  {
+    title: 'Record',
+    body: 'Hit the REC button (or press <strong>R</strong>) to start recording, then move your trackpad or cursor across the canvas. Your movement is captured in real time and stops automatically when the duration runs out.',
+  },
+  {
+    title: 'Playback',
+    body: 'Once recording stops, press the <strong>▶ Play</strong> button to watch your shape animate along the recorded path. You can also scrub the timeline to jump to any moment.',
+  },
+  {
+    title: 'Axis lock',
+    body: 'Hold <strong>Shift</strong> while recording to snap movement to a single axis — horizontal or vertical — based on whichever direction you move first.',
+  },
+  {
+    title: 'Delete',
+    body: 'With a layer selected, press <strong>Delete</strong> to remove its recording while keeping the shape in place. Press <strong>Delete</strong> again (with no recording) to remove the shape entirely.',
+  },
+  {
+    title: 'Export',
+    body: 'Once you have at least one animated layer, the <strong>Export MP4</strong> button becomes active. Click it to render and download your animation.',
+  },
+];
+
+const helpModal   = document.getElementById('help-modal');
+const helpStepNum = document.getElementById('help-step-num');
+const helpTitle   = document.getElementById('help-title');
+const helpBody    = document.getElementById('help-body');
+const helpDots    = document.getElementById('help-dots');
+const helpNext    = document.getElementById('help-next');
+let helpStep = 0;
+
+// Build dot indicators
+HELP_STEPS.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'help-dot' + (i === 0 ? ' active' : '');
+  dot.dataset.step = i;
+  helpDots.appendChild(dot);
+});
+
+function showHelpStep(idx) {
+  helpStep = idx;
+  const step = HELP_STEPS[idx];
+  helpStepNum.textContent = idx + 1;
+  helpTitle.textContent = step.title;
+  helpBody.innerHTML = step.body;
+
+  // Update dots
+  helpDots.querySelectorAll('.help-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+
+  // Last step: change NEXT to DONE
+  if (idx === HELP_STEPS.length - 1) {
+    helpNext.textContent = 'DONE ✓';
+  } else {
+    helpNext.textContent = 'NEXT →';
   }
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-updateLayerTabs();
-drawFrame(0);
-setAppMode('draw');
+function openHelp() {
+  showHelpStep(0);
+  helpModal.classList.add('visible');
+}
 
+function closeHelp() {
+  helpModal.classList.remove('visible');
+}
+
+document.getElementById('info-btn').addEventListener('click', openHelp);
+document.getElementById('help-close').addEventListener('click', closeHelp);
+
+helpNext.addEventListener('click', () => {
+  if (helpStep < HELP_STEPS.length - 1) {
+    showHelpStep(helpStep + 1);
+  } else {
+    closeHelp();
+  }
+});
+
+// Close on backdrop click
+helpModal.addEventListener('mousedown', e => {
+  if (e.target === helpModal) closeHelp();
+});
+
+// Escape also closes
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && helpModal.classList.contains('visible')) {
+    closeHelp();
+  }
+});
