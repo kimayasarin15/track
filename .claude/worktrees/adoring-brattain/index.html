@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motion Recorder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <button class="tool-btn active" id="tool-rect" title="Rectangle">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="3" width="12" height="10" rx="1" stroke="#ccc" stroke-width="1.5"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="tool-circle" title="Circle">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="5.5" stroke="#ccc" stroke-width="1.5"/>
+    </svg>
+  </button>
+  <button class="tool-btn" id="tool-line" title="Line">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <line x1="2" y1="13" x2="14" y2="3" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <div class="toolbar-sep"></div>
+
+  <!-- Color -->
+  <button id="color-btn" title="Color">
+    <input type="color" id="color-input" value="#ff4136">
+    <div id="color-preview"></div>
+  </button>
+
+  <div class="toolbar-sep"></div>
+
+  <div id="mode-btns">
+    <button id="btn-draw" class="mode-btn active">DRAW</button>
+    <button id="btn-record" class="mode-btn">RECORD</button>
+  </div>
+
+  <!-- Info + Export (right-aligned group) -->
+  <div id="toolbar-right">
+    <button id="info-btn" title="How to use">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="#ccc" stroke-width="1.4"/>
+        <text x="8" y="12.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9" font-weight="600" fill="#ccc">i</text>
+      </svg>
+    </button>
+    <button id="export-btn" disabled>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1v8M4 6l3 3 3-3M2 10v2h10v-2" stroke="#ccc" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      EXPORT MP4
+    </button>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-area">
+  <canvas id="main-canvas"></canvas>
+  <div id="rec-overlay"><div class="rec-dot"></div> REC <span id="rec-timer">0.0s</span></div>
+  <div id="status">Pick a shape tool, choose a color, then drag on the canvas to draw</div>
+
+  <!-- SHAPE INSPECTOR — lives inside canvas-area so position:absolute is relative to the canvas -->
+  <div id="inspector">
+    <div id="inspector-title">SHAPE</div>
+    <div class="inspector-row">
+      <label>COLOR</label>
+      <div id="insp-color-wrap">
+        <input type="color" id="insp-color" />
+        <div id="insp-color-preview"></div>
+      </div>
+    </div>
+    <div class="inspector-row">
+      <label>SIZE</label>
+      <input type="range" id="insp-size" min="5" max="200" value="100" />
+      <span id="insp-size-val">100%</span>
+    </div>
+    <button id="insp-close">DONE</button>
+  </div>
+</div>
+
+<!-- BOTTOM PANEL -->
+<div id="bottom-panel">
+  <div id="bottom-top-row">
+    <div id="layer-row">
+      <span class="row-label">LAYERS</span>
+      <button class="layer-tab active" data-layer="0">EMPTY 1</button>
+      <button id="add-layer-btn">+ ADD</button>
+    </div>
+
+    <div id="playback-row">
+      <select id="duration-select">
+        <option value="3">3s</option>
+        <option value="5" selected>5s</option>
+        <option value="10">10s</option>
+        <option value="15">15s</option>
+        <option value="30">30s</option>
+      </select>
+      <button class="ctrl-btn" id="play-btn" title="Play">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <polygon points="3,1 13,7 3,13" fill="#ccc"/>
+        </svg>
+      </button>
+      <button class="ctrl-btn" id="stop-btn" title="Stop">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="2" y="2" width="10" height="10" rx="1" fill="#ccc"/>
+        </svg>
+      </button>
+      <button class="ctrl-btn rec-btn" id="rec-btn" title="Record">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <circle cx="5" cy="5" r="4" fill="var(--accent)"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="timeline-row">
+    <span id="time-start">00:00</span>
+    <div id="timeline-track">
+      <div id="timeline-bg"></div>
+      <div id="timeline-filled"></div>
+      <div id="timeline-head"></div>
+    </div>
+    <span id="time-end">05:00</span>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div id="modal">
+  <div id="modal-box">
+    <h3>Exporting MP4</h3>
+    <p>Rendering frames...</p>
+    <div id="modal-progress-bg"><div id="modal-progress"></div></div>
+    <div id="modal-status"></div>
+    <button id="modal-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div id="help-modal">
+  <div id="help-box">
+    <div id="help-header">
+      <div id="help-step-label">STEP <span id="help-step-num">1</span> OF 7</div>
+      <button id="help-close" title="Close">✕</button>
+    </div>
+    <div id="help-title"></div>
+    <div id="help-body"></div>
+    <div id="help-footer">
+      <div id="help-dots"></div>
+      <div id="help-actions">
+        <button id="help-back">← BACK</button>
+        <button id="help-next">NEXT →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
