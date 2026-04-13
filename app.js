@@ -12,6 +12,10 @@ let currentColor = '#ff4136';
 // Interaction modes: 'draw' | 'record'
 let appMode = 'draw';
 
+// Canvas settings
+let canvasRatio  = '16:9';   // '16:9' | '1:1' | '9:16'
+let canvasBgColor = '#ffffff';
+
 // Draw state
 let isDrawing = false;
 let drawStart = null; // {x, y} in canvas pixels
@@ -33,10 +37,22 @@ const canvasArea = document.getElementById('canvas-area');
 const canvas = document.getElementById('main-canvas');
 const ctx = canvas.getContext('2d');
 
+const RATIOS = { '16:9': [16, 9], '1:1': [1, 1], '9:16': [9, 16] };
+const PADDING = 28; // px gap around canvas within canvas-area
+
 function resizeCanvas() {
-  const r = canvasArea.getBoundingClientRect();
-  canvas.width = r.width;
-  canvas.height = r.height;
+  const r   = canvasArea.getBoundingClientRect();
+  const aW  = r.width  - PADDING * 2;
+  const aH  = r.height - PADDING * 2;
+  const [rW, rH] = RATIOS[canvasRatio];
+
+  // Fit the ratio inside the available space
+  let w = aW;
+  let h = w * rH / rW;
+  if (h > aH) { h = aH; w = h * rW / rH; }
+
+  canvas.width  = Math.round(w);
+  canvas.height = Math.round(h);
   drawFrame(playheadPct);
 }
 window.addEventListener('resize', resizeCanvas);
@@ -135,6 +151,9 @@ function getPositionAtTime(anim, t) {
 
 function drawFrame(pct) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Fill background colour
+  ctx.fillStyle = canvasBgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   const t = pct * recordDuration;
 
   for (let i = 0; i < layers.length; i++) {
@@ -400,9 +419,9 @@ canvas.addEventListener('mousedown', e => {
   // to edit it, regardless of which mode you're in.
   const layer = layers[activeLayer];
   if (!isDrawing && layer.shape && hitTestShape(layer.shape, pos.x, pos.y)) {
-    const r = canvas.getBoundingClientRect();
-    // Coordinates relative to canvas-area (inspector's offset parent)
-    openInspector(layer.shape, e.clientX - r.left, e.clientY - r.top);
+    // Use canvas-area coords (inspector's offset parent), not canvas coords
+    const areaR = canvasArea.getBoundingClientRect();
+    openInspector(layer.shape, e.clientX - areaR.left, e.clientY - areaR.top);
     return;
   }
 
@@ -750,7 +769,7 @@ exportBtn.addEventListener('click', async () => {
     const t = pct * recordDuration;
 
     offCtx.clearRect(0, 0, W, H);
-    offCtx.fillStyle = '#ffffff';
+    offCtx.fillStyle = canvasBgColor;
     offCtx.fillRect(0, 0, W, H);
 
     for (let i = 0; i < layers.length; i++) {
@@ -889,4 +908,80 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && helpModal.classList.contains('visible')) {
     closeHelp();
   }
+  if (e.key === 'Escape' && canvasModal.classList.contains('visible')) {
+    closeCanvasModal();
+  }
 });
+
+// ─── CANVAS SETTINGS MODAL ────────────────────────────────────────────────────
+const canvasModal       = document.getElementById('canvas-modal');
+const canvasBgInput     = document.getElementById('canvas-bg-input');
+const canvasBgPreview   = document.getElementById('canvas-bg-preview');
+const canvasBgHex       = document.getElementById('canvas-bg-hex');
+
+// Pending (unsaved) values while modal is open
+let pendingRatio   = canvasRatio;
+let pendingBgColor = canvasBgColor;
+
+function openCanvasModal() {
+  // Sync UI to current saved values
+  pendingRatio   = canvasRatio;
+  pendingBgColor = canvasBgColor;
+
+  document.querySelectorAll('.ratio-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.ratio === pendingRatio);
+  });
+
+  canvasBgInput.value = pendingBgColor;
+  applyBgPreview(pendingBgColor);
+
+  canvasModal.classList.add('visible');
+}
+
+function closeCanvasModal() {
+  canvasModal.classList.remove('visible');
+}
+
+function applyBgPreview(color) {
+  // The ::after pseudo-element carries the actual color over the checkerboard
+  canvasBgPreview.style.setProperty('--bg-color', color);
+  // Simpler: just set background directly (checkerboard only shows for transparency)
+  canvasBgPreview.style.background = color;
+  canvasBgHex.textContent = color;
+}
+
+// Ratio buttons
+document.querySelectorAll('.ratio-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    pendingRatio = btn.dataset.ratio;
+    document.querySelectorAll('.ratio-btn').forEach(b =>
+      b.classList.toggle('active', b === btn)
+    );
+  });
+});
+
+// Background colour picker
+canvasBgInput.addEventListener('input', e => {
+  pendingBgColor = e.target.value;
+  applyBgPreview(pendingBgColor);
+});
+
+// Save — apply both ratio and background
+document.getElementById('canvas-modal-save').addEventListener('click', () => {
+  canvasRatio   = pendingRatio;
+  canvasBgColor = pendingBgColor;
+  resizeCanvas();   // recalculate canvas dimensions for new ratio
+  closeCanvasModal();
+});
+
+document.getElementById('canvas-modal-cancel').addEventListener('click', closeCanvasModal);
+document.getElementById('canvas-settings-btn').addEventListener('click', openCanvasModal);
+document.getElementById('canvas-modal-close').addEventListener('click', closeCanvasModal);
+
+// Close on backdrop click
+canvasModal.addEventListener('mousedown', e => {
+  if (e.target === canvasModal) closeCanvasModal();
+});
+
+// Initialise preview swatch
+applyBgPreview(canvasBgColor);

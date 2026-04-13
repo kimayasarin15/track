@@ -34,6 +34,17 @@
     <div id="color-preview"></div>
   </button>
 
+  <!-- Canvas settings -->
+  <button class="tool-btn" id="canvas-settings-btn" title="Canvas settings">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="3" y="3" width="10" height="10" rx="1" stroke="#ccc" stroke-width="1.4"/>
+      <rect x="1.5" y="1.5" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+      <rect x="12" y="1.5" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+      <rect x="1.5" y="12" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+      <rect x="12" y="12" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+    </svg>
+  </button>
+
   <div class="toolbar-sep"></div>
 
   <div id="mode-btns">
@@ -137,6 +148,46 @@
     <div id="modal-progress-bg"><div id="modal-progress"></div></div>
     <div id="modal-status"></div>
     <button id="modal-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Canvas Settings Modal -->
+<div id="canvas-modal">
+  <div id="canvas-modal-box">
+    <div id="canvas-modal-header">
+      <span id="canvas-modal-title">CANVAS</span>
+      <button id="canvas-modal-close" title="Close">✕</button>
+    </div>
+
+    <div class="canvas-section-label">ASPECT RATIO</div>
+    <div id="ratio-options">
+      <button class="ratio-btn active" data-ratio="16:9">
+        <div class="ratio-preview ratio-16-9"></div>
+        <span>16:9</span>
+      </button>
+      <button class="ratio-btn" data-ratio="1:1">
+        <div class="ratio-preview ratio-1-1"></div>
+        <span>1:1</span>
+      </button>
+      <button class="ratio-btn" data-ratio="9:16">
+        <div class="ratio-preview ratio-9-16"></div>
+        <span>9:16</span>
+      </button>
+    </div>
+
+    <div class="canvas-section-label">BACKGROUND COLOR</div>
+    <div id="canvas-bg-row">
+      <div id="canvas-bg-wrap">
+        <input type="color" id="canvas-bg-input" value="#ffffff" />
+        <div id="canvas-bg-preview"></div>
+      </div>
+      <span id="canvas-bg-hex">#ffffff</span>
+    </div>
+
+    <div id="canvas-modal-footer">
+      <button id="canvas-modal-cancel">CANCEL</button>
+      <button id="canvas-modal-save">SAVE</button>
+    </div>
   </div>
 </div>
 
