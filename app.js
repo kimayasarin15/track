@@ -926,23 +926,23 @@ document.getElementById('modal-cancel').addEventListener('click', () => {
 // ─── HELP / INFO MODAL ────────────────────────────────────────────────────────
 const HELP_STEPS = [
   {
-    title: 'Add a shape',
-    body: 'Select a shape type (circle, square, or line) from the toolbar and choose a colour. Drag on the canvas to draw it — it will appear on the active layer.',
+    title: 'Create a canvas',
+    body: 'Start by selecting your canvas size and background color.',
   },
   {
-    title: 'Select your layer',
-    body: 'Click a layer tab at the bottom to make it active. Each layer holds one shape and one recorded motion path.',
+    title: 'Draw',
+    body: 'Select a shape type (circle, square, or line) from the toolbar and picking a color, then drag on the canvas to draw it onto the active layer. Use the layer tabs at the bottom to switch or add between layers, each one holds a single shape and its own recorded motion path. ',
   },
   {
     title: 'Record',
-    body: 'Hit the REC button (or press <strong>R</strong>) to start recording, then move your trackpad or cursor across the canvas. Your movement is captured in real time and stops automatically when the duration runs out.',
+    body: 'To animate a shape, switch to Record mode and hit the REC button (or press <strong>R</strong>), then move your cursor across the canvas; recording stops automatically when the set duration runs out. You can edit the duration at anytime.',
   },
   {
     title: 'Playback',
     body: 'Once recording stops, press the <strong>▶ Play</strong> button to watch your shape animate along the recorded path. You can also scrub the timeline to jump to any moment.',
   },
   {
-    title: 'Axis lock',
+    title: 'Shortvu',
     body: 'Hold <strong>Shift</strong> while recording to snap movement to a single axis — horizontal or vertical — based on whichever direction you move first.',
   },
   {
@@ -951,7 +951,7 @@ const HELP_STEPS = [
   },
   {
     title: 'Export',
-    body: 'Once you have at least one animated layer, the <strong>Export MP4</strong> button becomes active. Click it to render and download your animation.',
+    body: 'When you are done, click the the <strong>Export</strong> button to render and download your animation.',
   },
 ];
 
