@@ -10,6 +10,19 @@
 
 <!-- TOOLBAR -->
 <div id="toolbar">
+  <!-- Canvas settings -->
+  <button class="tool-btn" id="canvas-settings-btn" title="Canvas settings">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="3" y="3" width="10" height="10" rx="1" stroke="#ccc" stroke-width="1.4"/>
+      <rect x="1.5" y="1.5" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+      <rect x="12" y="1.5" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+      <rect x="1.5" y="12" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+      <rect x="12" y="12" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
+    </svg>
+  </button>
+
+  <div class="toolbar-sep"></div>
+
   <button class="tool-btn active" id="tool-rect" title="Rectangle">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
       <rect x="2" y="3" width="12" height="10" rx="1" stroke="#ccc" stroke-width="1.5"/>
@@ -26,23 +39,10 @@
     </svg>
   </button>
 
-  <div class="toolbar-sep"></div>
-
   <!-- Color -->
   <button id="color-btn" title="Color">
     <input type="color" id="color-input" value="#ff4136">
     <div id="color-preview"></div>
-  </button>
-
-  <!-- Canvas settings -->
-  <button class="tool-btn" id="canvas-settings-btn" title="Canvas settings">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <rect x="3" y="3" width="10" height="10" rx="1" stroke="#ccc" stroke-width="1.4"/>
-      <rect x="1.5" y="1.5" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
-      <rect x="12" y="1.5" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
-      <rect x="1.5" y="12" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
-      <rect x="12" y="12" width="2.5" height="2.5" rx="0.5" fill="#ccc"/>
-    </svg>
   </button>
 
   <div class="toolbar-sep"></div>
