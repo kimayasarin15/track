@@ -942,7 +942,7 @@ const HELP_STEPS = [
     body: 'Once recording stops, press the <strong>▶ Play</strong> button to watch your shape animate along the recorded path. You can also scrub the timeline to jump to any moment.',
   },
   {
-    title: 'Shortvu',
+    title: 'Axis-lock',
     body: 'Hold <strong>Shift</strong> while recording to snap movement to a single axis — horizontal or vertical — based on whichever direction you move first.',
   },
   {

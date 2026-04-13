@@ -1,4 +1,8 @@
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap');
+
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -13,12 +17,14 @@
     --accent-blue: #4a6cf7;
     --btn-bg: #3a3a3a;
     --btn-active: #4a4a4a;
+    --font: "Geist Mono", monospace;
   }
 
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'IBM Plex Sans', monospace;
+    font-family: var(--font);
+    font-weight: 300;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -89,7 +95,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 0 8px;
     height: 36px;
@@ -104,7 +110,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 0 14px;
     height: 36px;
@@ -141,7 +147,7 @@
     top: 12px; right: 12px;
     background: rgba(255,65,54,0.9);
     color: white;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 12px;
     padding: 6px 12px;
     border-radius: 20px;
@@ -163,7 +169,7 @@
   #status {
     position: absolute;
     bottom: 12px; left: 12px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     color: #999;
     pointer-events: none;
@@ -199,7 +205,7 @@
 
   /* "LAYERS" label */
   .row-label {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     color: var(--text-dim);
     margin-right: 2px;
@@ -214,7 +220,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-dim);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     cursor: pointer;
     transition: all 0.15s;
@@ -232,7 +238,7 @@
     border: 1px dashed var(--border);
     border-radius: 6px;
     color: var(--text-dim);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     cursor: pointer;
     transition: all 0.15s;
@@ -271,7 +277,7 @@
   }
 
   #time-start, #time-end {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     color: var(--text-dim);
     min-width: 36px;
@@ -326,7 +332,7 @@
     height: 36px;
     padding: 0 14px;
     border-radius: 6px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.05em;
@@ -367,7 +373,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 0 8px;
     height: 36px;
@@ -393,7 +399,7 @@
     min-width: 280px;
     text-align: center;
   }
-  #modal-box h3 { font-family: 'IBM Plex Mono', monospace; font-size: 14px; margin-bottom: 8px; }
+  #modal-box h3 { font-family: var(--font); font-size: 14px; margin-bottom: 8px; }
   #modal-box p { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
   #modal-progress-bg {
     height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 20px;
@@ -401,11 +407,11 @@
   #modal-progress { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s; }
   #modal-cancel {
     background: var(--btn-bg); border: 1px solid var(--border); border-radius: 6px;
-    color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: var(--text); font-family: var(--font); font-size: 12px;
     padding: 8px 20px; cursor: pointer;
   }
   #modal-status {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     color: var(--text-dim);
     margin-bottom: 14px;
@@ -428,7 +434,7 @@
   #inspector.visible { display: flex; }
 
   #inspector-title {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 10px;
     letter-spacing: 0.1em;
     color: var(--text-dim);
@@ -441,7 +447,7 @@
     gap: 10px;
   }
   .inspector-row label {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 10px;
     color: var(--text-dim);
     width: 36px;
@@ -473,7 +479,7 @@
     cursor: pointer;
   }
   #insp-size-val {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 10px;
     color: var(--text-dim);
     width: 34px;
@@ -487,7 +493,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 7px 0;
     cursor: pointer;
@@ -549,7 +555,7 @@
   }
 
   #help-step-label {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 10px;
     letter-spacing: 0.12em;
     color: var(--text-dim);
@@ -573,7 +579,7 @@
   #help-close:hover { border-color: #666; color: var(--text); background: var(--btn-bg); }
 
   #help-title {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 13px;
     font-weight: 500;
     color: var(--text);
@@ -581,7 +587,7 @@
   }
 
   #help-body {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: var(--font);
     font-size: 13px;
     color: #c0c0c0;
     line-height: 1.65;
@@ -619,7 +625,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-dim);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 7px 14px;
     cursor: pointer;
@@ -634,7 +640,7 @@
     border: 1px solid rgba(74,108,247,0.5);
     border-radius: 6px;
     color: #7b9fff;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 7px 16px;
     cursor: pointer;
@@ -674,7 +680,7 @@
   }
 
   #canvas-modal-title {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.1em;
@@ -696,7 +702,7 @@
   #canvas-modal-close:hover { border-color: #666; color: var(--text); background: var(--btn-bg); }
 
   .canvas-section-label {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 10px;
     letter-spacing: 0.1em;
     color: var(--text-dim);
@@ -723,7 +729,7 @@
     gap: 8px;
     transition: all 0.15s;
     color: var(--text-dim);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
   }
   .ratio-btn:hover { background: var(--btn-active); border-color: #666; color: var(--text); }
@@ -788,7 +794,7 @@
   }
 
   #canvas-bg-hex {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 12px;
     color: var(--text-dim);
   }
@@ -806,7 +812,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-dim);
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 8px 16px;
     cursor: pointer;
@@ -819,7 +825,7 @@
     border: 1px solid rgba(74,108,247,0.5);
     border-radius: 6px;
     color: #7b9fff;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: var(--font);
     font-size: 11px;
     padding: 8px 20px;
     cursor: pointer;
