@@ -271,6 +271,20 @@
   .ctrl-btn.rec-btn:hover { background: rgba(255,65,54,0.2); }
   .ctrl-btn.rec-btn.recording { background: var(--accent); }
 
+  /* "PRESS R" label inside record button — desktop only */
+  .rec-btn-label {
+    font-family: var(--font);
+    font-size: 10px;
+    color: var(--accent);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .ctrl-btn.rec-btn {
+    width: auto;
+    padding: 0 10px;
+    gap: 7px;
+  }
+
   /* Timeline */
   #timeline-row {
     display: flex;
@@ -878,7 +892,9 @@
     .layer-tab,
     #add-layer-btn { height: 42px; }
 
-    .ctrl-btn { width: 42px; height: 42px; }
+    .ctrl-btn { width: 42px; height: 42px; padding: 0; gap: 0; }
+    .rec-btn-label { display: none; }
+    .ctrl-btn.rec-btn { width: 42px; padding: 0; }
 
     #duration-select { height: 42px; }
 
