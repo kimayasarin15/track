@@ -1,7 +1,7 @@
 {
-  "name": "Motion Recorder",
-  "short_name": "Motion",
-  "description": "Record and animate shapes and images on a canvas",
+  "name": "Skitter",
+  "short_name": "Skitter",
+  "description": "Movement based animation tool",
   "start_url": ".",
   "display": "standalone",
   "orientation": "any",
