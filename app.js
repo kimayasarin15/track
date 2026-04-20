@@ -1,5 +1,5 @@
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const MAX_LAYERS = 6;
+const MAX_LAYERS = 10;
 const FPS = 30;
 
 let layers = [
@@ -244,6 +244,7 @@ document.getElementById('image-input').addEventListener('change', e => {
     drawFrame(playheadPct);
     checkExportReady();
     setStatus(`Image placed on layer ${activeLayer + 1}. Click it to resize, then switch to Record mode to animate.`);
+    autoAdvanceLayer();
   };
   img.src = url;
   // Reset so the same file can be re-selected
@@ -394,6 +395,22 @@ document.getElementById('add-layer-btn').addEventListener('click', () => {
   activeLayer = layers.length - 1;
   updateLayerTabs();
 });
+
+// Creates a new empty layer and activates it (called after placing a shape/image)
+function autoAdvanceLayer() {
+  if (layers.length >= MAX_LAYERS) return;
+  layers.push({ shape: null, animation: null });
+  const row    = document.getElementById('layer-row');
+  const addBtn = document.getElementById('add-layer-btn');
+  const tab    = document.createElement('button');
+  tab.className    = 'layer-tab';
+  tab.dataset.layer = layers.length - 1;
+  tab.textContent  = layerLabel(layers.length - 1);
+  attachTabListeners(tab);
+  row.insertBefore(tab, addBtn);
+  activeLayer = layers.length - 1;
+  updateLayerTabs();
+}
 
 // ─── SHAPE HIT TEST ───────────────────────────────────────────────────────────
 function hitTestShape(shape, px, py) {
@@ -713,8 +730,8 @@ canvas.addEventListener('mouseup', e => {
   updateLayerTabs();
   drawFrame(playheadPct);
   checkExportReady();
-
   setStatus(`${layerLabel(activeLayer)} drawn. Click it to change colour or size, then switch to Record mode to animate.`);
+  autoAdvanceLayer();
 });
 
 canvas.addEventListener('mouseleave', e => {
@@ -867,6 +884,7 @@ canvas.addEventListener('touchend', e => {
   drawFrame(playheadPct);
   checkExportReady();
   setStatus(`${layerLabel(activeLayer)} drawn. Tap it to edit, then switch to Record mode to animate.`);
+  autoAdvanceLayer();
 }, { passive: false });
 
 canvas.addEventListener('touchcancel', () => {
