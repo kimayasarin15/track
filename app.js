@@ -203,6 +203,30 @@ function drawFrame(pct) {
   }
 }
 
+// ─── DELETE BUTTON ────────────────────────────────────────────────────────────
+function doDelete() {
+  if (isRecording || isPlaying || isDrawing) return;
+  const layer = layers[activeLayer];
+  if (layer.animation) {
+    layer.animation = null;
+    updateLayerTabs();
+    drawFrame(playheadPct);
+    checkExportReady();
+    setStatus(`Animation cleared from ${layerLabel(activeLayer)}. Tap delete again to remove the shape.`);
+  } else if (layer.shape) {
+    layer.shape = null;
+    updateLayerTabs();
+    drawFrame(playheadPct);
+    checkExportReady();
+    setStatus(`${layerLabel(activeLayer)} cleared.`);
+    setAppMode('draw');
+  }
+}
+
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', doDelete);
+});
+
 // ─── TOOL SELECTION ───────────────────────────────────────────────────────────
 document.querySelectorAll('.tool-btn[id^="tool-"]:not(#tool-image)').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -220,35 +244,33 @@ document.getElementById('tool-image').addEventListener('click', () => {
   document.getElementById('image-input').click();
 });
 
-document.getElementById('image-input').addEventListener('change', e => {
+document.getElementById('image-input').addEventListener('change', async e => {
   const file = e.target.files[0];
   if (!file) return;
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = () => {
-    URL.revokeObjectURL(url);
-    // Fit image so its longest dimension is 40% of the canvas
-    const aspect = img.naturalWidth / img.naturalHeight;
-    let w, h;
-    if (aspect >= 1) {
-      w = 0.4;
-      h = 0.4 / aspect * (canvas.width / canvas.height);
-    } else {
-      h = 0.4;
-      w = 0.4 * aspect * (canvas.height / canvas.width);
-    }
-    const shape = { type: 'image', img, cx: 0.5, cy: 0.5, w, h, scale: 1.0 };
-    layers[activeLayer].shape = shape;
-    layers[activeLayer].animation = null;
-    updateLayerTabs();
-    drawFrame(playheadPct);
-    checkExportReady();
-    setStatus(`Image placed on layer ${activeLayer + 1}. Click it to resize, then switch to Record mode to animate.`);
-    autoAdvanceLayer();
-  };
-  img.src = url;
   // Reset so the same file can be re-selected
   e.target.value = '';
+
+  // createImageBitmap gives a fully-decoded GPU-ready image that renders
+  // correctly on both the live canvas and the offscreen export canvas.
+  const bitmap = await createImageBitmap(file);
+  const aspect = bitmap.width / bitmap.height;
+  let w, h;
+  // Fit image so its longest dimension is 40% of the canvas
+  if (aspect >= 1) {
+    w = 0.4;
+    h = 0.4 / aspect * (canvas.width / canvas.height);
+  } else {
+    h = 0.4;
+    w = 0.4 * aspect * (canvas.height / canvas.width);
+  }
+  const shape = { type: 'image', img: bitmap, cx: 0.5, cy: 0.5, w, h, scale: 1.0 };
+  layers[activeLayer].shape = shape;
+  layers[activeLayer].animation = null;
+  updateLayerTabs();
+  drawFrame(playheadPct);
+  checkExportReady();
+  setStatus(`Image placed on layer ${activeLayer + 1}. Click it to resize, then switch to Record mode to animate.`);
+  autoAdvanceLayer();
 });
 
 
@@ -1094,22 +1116,7 @@ document.addEventListener('keydown', e => {
   }
 
   if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (isRecording || isPlaying || isDrawing) return;
-    const layer = layers[activeLayer];
-    if (layer.animation) {
-      layer.animation = null;
-      updateLayerTabs();
-      drawFrame(playheadPct);
-      checkExportReady();
-      setStatus(`Animation cleared from Layer ${activeLayer + 1}. Press Delete again to remove the shape.`);
-    } else if (layer.shape) {
-      layer.shape = null;
-      updateLayerTabs();
-      drawFrame(playheadPct);
-      checkExportReady();
-      setStatus(`Layer ${activeLayer + 1} cleared.`);
-      setAppMode('draw');
-    }
+    doDelete();
   }
 });
 
@@ -1196,24 +1203,32 @@ document.getElementById('modal-cancel').addEventListener('click', () => {
 // ─── HELP / INFO MODAL ────────────────────────────────────────────────────────
 const HELP_STEPS = [
   {
-    title: 'Canvas',
-    body: 'Start by selecting your canvas dimensions and background color. All changes are saved automatically and you can edit this at anytime.',
+    title: 'Create a canvas',
+    body: 'Start by selecting your canvas size and background color.',
   },
   {
     title: 'Draw',
-    body: 'In Draw mode, select a shape type (circle, square, or line) from the toolbar and pick a color, then drag on the canvas. You can also upload images. Hold and drag to move objects around. Click on each object to change the size and color. You can reorder the objects in the objects panel below by dragging them.',
+    body: 'Select a shape type (circle, square, or line) from the toolbar and picking a color, then drag on the canvas to draw it onto the active layer. Use the layer tabs at the bottom to switch or add between layers, each one holds a single shape and its own recorded motion path. ',
   },
   {
     title: 'Record',
-    body: 'To animate an object, hit the REC button (or press <strong>R</strong>) then move your cursor across the canvas; recording stops automatically when the set duration runs out. You can edit the duration at anytime. While recording, hold <strong>Shift</strong> to lock movement to a single axis, horizontal or vertical, based on your initial direction. To delete, press <strong>Delete</strong> on a selected layer to clear the recording first, then again to remove the shape itself. ',
+    body: 'To animate a shape, switch to Record mode and hit the REC button (or press <strong>R</strong>), then move your cursor across the canvas; recording stops automatically when the set duration runs out. You can edit the duration at anytime.',
   },
   {
     title: 'Playback',
     body: 'Once recording stops, press the <strong>▶ Play</strong> button to watch your shape animate along the recorded path. You can also scrub the timeline to jump to any moment.',
   },
   {
+    title: 'Axis-lock',
+    body: 'Hold <strong>Shift</strong> while recording to snap movement to a single axis — horizontal or vertical — based on whichever direction you move first.',
+  },
+  {
+    title: 'Delete',
+    body: 'With a layer selected, press <strong>Delete</strong> to remove its recording while keeping the shape in place. Press <strong>Delete</strong> again (with no recording) to remove the shape entirely.',
+  },
+  {
     title: 'Export',
-    body: 'When you are done, click the <strong>Export</strong> button to render and download your animation. ',
+    body: 'When you are done, click the the <strong>Export</strong> button to render and download your animation.',
   },
 ];
 
@@ -1411,7 +1426,7 @@ function registerServiceWorker() {
 
   globalThis.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("sw.js")
+      .register("/sw.js")
       .then((registration) => {
         console.log("SW registered:", registration.scope);
       })
