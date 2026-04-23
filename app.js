@@ -1180,12 +1180,16 @@ exportBtn.addEventListener('click', async () => {
 
     for (let i = 0; i < layers.length; i++) {
       const layer = layers[i];
-      if (!layer.shape || !layer.animation) continue;
-      const centre = shapeCentre(layer.shape);
-      const pos = getPositionAtTime(layer.animation, t);
-      if (!pos) continue;
-      const dx = (pos.x - centre.x) * W;
-      const dy = (pos.y - centre.y) * H;
+      if (!layer.shape) continue;
+      let dx = 0, dy = 0;
+      if (layer.animation) {
+        const centre = shapeCentre(layer.shape);
+        const pos = getPositionAtTime(layer.animation, t);
+        if (pos) {
+          dx = (pos.x - centre.x) * W;
+          dy = (pos.y - centre.y) * H;
+        }
+      }
       drawShapeCtx(offCtx, layer.shape, W, H, dx, dy);
     }
 
