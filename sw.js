@@ -1,4 +1,4 @@
-const STATIC_CACHE = "motion-static-v2";
+const STATIC_CACHE = "motion-static-v3";
 const API_CACHE = "motion-api-v1";
 const IMAGE_CACHE = "motion-images-v1";
 
