@@ -1467,6 +1467,16 @@ function registerServiceWorker() {
       .catch((error) => {
         console.error("SW registration failed:", error);
       });
+
+    // When a new SW takes over (after a deploy), reload once so the
+    // page gets fresh HTML/JS/CSS instead of the stale cached version.
+    let firstController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (firstController) {
+        window.location.reload();
+      }
+      firstController = true;
+    });
   });
 }
 

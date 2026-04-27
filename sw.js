@@ -1,4 +1,4 @@
-const STATIC_CACHE = "motion-static-v3";
+const STATIC_CACHE = "motion-static-v4";
 const API_CACHE = "motion-api-v1";
 const IMAGE_CACHE = "motion-images-v1";
 
@@ -29,6 +29,16 @@ self.addEventListener("activate", (event) => {
 
 function isApiRequest(url) {
   return url.hostname === "api.are.na";
+}
+
+function isHtmlRequest(request) {
+  const url = new URL(request.url);
+  const accept = request.headers.get("Accept") || "";
+  return (
+    accept.includes("text/html") ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith("/")
+  );
 }
 
 function isImageRequest(request) {
@@ -127,6 +137,13 @@ self.addEventListener("fetch", (event) => {
 
   if (isApiRequest(url)) {
     event.respondWith(networkFirst(request, API_CACHE, 5000));
+    return;
+  }
+
+  // Always fetch HTML fresh from the network so deploys are visible immediately.
+  // Falls back to cache only when offline.
+  if (isHtmlRequest(request)) {
+    event.respondWith(networkFirst(request, STATIC_CACHE, 3000));
     return;
   }
 
