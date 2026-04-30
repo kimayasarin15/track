@@ -1,5 +1,5 @@
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const MAX_LAYERS = 10;
+const MAX_LAYERS = 15;
 const FPS = 30;
 
 let layers = [
@@ -66,7 +66,8 @@ resizeCanvas();
 // image:  { type, img, cx, cy, w, h, scale } (normalised centre + half-dimensions)
 
 function shapeCentre(shape) {
-  if (shape.type === 'circle' || shape.type === 'image') return { x: shape.cx, y: shape.cy };
+  if (shape.type === 'circle' || shape.type === 'image' || shape.type === 'text')
+    return { x: shape.cx, y: shape.cy };
   return { x: (shape.x1 + shape.x2) / 2, y: (shape.y1 + shape.y2) / 2 };
 }
 
@@ -75,7 +76,7 @@ function shapeCentre(shape) {
 function snapshotShape(shape) {
   if (shape.type === 'rect' || shape.type === 'line')
     return { x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2 };
-  if (shape.type === 'circle' || shape.type === 'image')
+  if (shape.type === 'circle' || shape.type === 'image' || shape.type === 'text')
     return { cx: shape.cx, cy: shape.cy };
   return {};
 }
@@ -85,7 +86,7 @@ function moveShapeByDelta(shape, snap, ndx, ndy) {
   if (shape.type === 'rect' || shape.type === 'line') {
     shape.x1 = snap.x1 + ndx; shape.x2 = snap.x2 + ndx;
     shape.y1 = snap.y1 + ndy; shape.y2 = snap.y2 + ndy;
-  } else if (shape.type === 'circle' || shape.type === 'image') {
+  } else if (shape.type === 'circle' || shape.type === 'image' || shape.type === 'text') {
     shape.cx = snap.cx + ndx;
     shape.cy = snap.cy + ndy;
   }
@@ -128,6 +129,15 @@ function drawShapeCtx(offCtx, shape, W, H, dx, dy) {
     const px = shape.cx * W + dx, py = shape.cy * H + dy;
     const pw = shape.w * W, ph = shape.h * H;
     offCtx.drawImage(shape.img, px - pw / 2, py - ph / 2, pw, ph);
+  } else if (shape.type === 'text') {
+    const fs = shape.fontSize * H * (shape.scale || 1.0);
+    offCtx.save();
+    offCtx.font = `500 ${fs}px 'Geist', sans-serif`;
+    offCtx.fillStyle = shape.color;
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillText(shape.text, shape.cx * W + dx, shape.cy * H + dy);
+    offCtx.restore();
   }
   offCtx.restore();
 }
@@ -469,6 +479,12 @@ function hitTestShape(shape, px, py) {
   } else if (shape.type === 'image') {
     return px >= shape.cx - shape.w / 2 && px <= shape.cx + shape.w / 2 &&
            py >= shape.cy - shape.h / 2 && py <= shape.cy + shape.h / 2;
+  } else if (shape.type === 'text') {
+    ctx.font = `500 ${shape.fontSize * canvas.height * (shape.scale || 1.0)}px 'Geist', sans-serif`;
+    const metrics = ctx.measureText(shape.text);
+    const hw = (metrics.width / canvas.width) / 2 + 0.01;
+    const hh = shape.fontSize * (shape.scale || 1.0) * 0.8;
+    return Math.abs(px - shape.cx) < hw && Math.abs(py - shape.cy) < hh;
   }
   return false;
 }
@@ -484,6 +500,8 @@ let   inspecting   = false;
 function openInspector(shape, anchorX, anchorY) {
   inspecting = true;
   const isImage = shape.type === 'image';
+  document.getElementById('inspector-title').textContent = shape.type.toUpperCase();
+  // Image has no color property; all other types (rect, circle, line, text) do
   document.getElementById('insp-color-row').style.display = isImage ? 'none' : '';
   if (!isImage) {
     inspColor.value = shape.color;
@@ -558,6 +576,7 @@ function applyScale(shape, newScale) {
     shape.w *= ratio;
     shape.h *= ratio;
   }
+  // text: fontSize stays fixed; scale multiplier handles sizing — nothing extra to do
 }
 
 // Close inspector when clicking outside it (canvas clicks handled separately below)
@@ -634,6 +653,24 @@ canvas.addEventListener('mousedown', e => {
 
   const pos = canvasPos(e);
   const layer = layers[activeLayer];
+
+  // Text tool: hitting an existing shape starts a drag-or-click (same as normal
+  // draw mode); clicking empty canvas opens the text input.
+  if (appMode === 'draw' && currentTool === 'text') {
+    if (layer.shape && hitTestShape(layer.shape, pos.x, pos.y)) {
+      // Let the normal drag/click logic below handle this hit
+      shapeDragStart    = pos;
+      shapeDragSnap     = snapshotShape(layer.shape);
+      shapeDragging     = false;
+      shapeDragClientXY = { clientX: e.clientX, clientY: e.clientY };
+      return;
+    }
+    // Clicking empty canvas → new text.
+    // preventDefault stops the browser resetting focus away from the textarea.
+    e.preventDefault();
+    openTextInput(pos.x, pos.y, null);
+    return;
+  }
 
   if (!isDrawing && layer.shape && hitTestShape(layer.shape, pos.x, pos.y)) {
     if (appMode === 'draw') {
@@ -814,6 +851,20 @@ canvas.addEventListener('touchstart', e => {
   const pos = canvasPos(pt);
   const layer = layers[activeLayer];
 
+  // Text tool: hitting an existing shape starts drag-or-click; empty area → new text.
+  if (appMode === 'draw' && currentTool === 'text') {
+    if (layer.shape && hitTestShape(layer.shape, pos.x, pos.y)) {
+      shapeDragStart    = pos;
+      shapeDragSnap     = snapshotShape(layer.shape);
+      shapeDragging     = false;
+      shapeDragClientXY = { clientX: pt.clientX, clientY: pt.clientY };
+      return;
+    }
+    e.preventDefault();
+    openTextInput(pos.x, pos.y, null);
+    return;
+  }
+
   if (!isDrawing && layer.shape && hitTestShape(layer.shape, pos.x, pos.y)) {
     if (appMode === 'draw') {
       shapeDragStart    = pos;
@@ -894,6 +945,7 @@ canvas.addEventListener('touchmove', e => {
   }
 }, { passive: false });
 
+let lastTapTime = 0;
 canvas.addEventListener('touchend', e => {
   e.preventDefault();
   if (shapeDragStart) {
@@ -910,7 +962,20 @@ canvas.addEventListener('touchend', e => {
     shapeDragging = false;
     return;
   }
-  if (appMode !== 'draw' || !isDrawing || !drawStart) return;
+  if (appMode !== 'draw' || !isDrawing || !drawStart) {
+    // Double-tap to edit text (when not mid-draw and no shape drag)
+    const now = Date.now();
+    if (now - lastTapTime < 300) {
+      const pt  = touchPt(e);
+      const pos = canvasPos(pt);
+      const layer = layers[activeLayer];
+      if (layer.shape && layer.shape.type === 'text' && hitTestShape(layer.shape, pos.x, pos.y)) {
+        openTextInput(layer.shape.cx, layer.shape.cy, layer.shape);
+      }
+    }
+    lastTapTime = now;
+    return;
+  }
   isDrawing = false;
   const pt    = touchPt(e);
   const end   = canvasPos(pt);
@@ -936,6 +1001,108 @@ canvas.addEventListener('touchend', e => {
 canvas.addEventListener('touchcancel', () => {
   if (isDrawing) { isDrawing = false; drawStart = null; drawFrame(playheadPct); }
   if (appMode === 'record' && isRecording && recordedPath.length > 5) stopRecording();
+});
+
+// ─── TEXT TOOL ────────────────────────────────────────────────────────────────
+let editingTextShape = null; // the shape being edited (null = new)
+let editingTextLayer = -1;
+
+function openTextInput(cx, cy, shape) {
+  editingTextShape = shape;
+  editingTextLayer = activeLayer;
+
+  const input = document.getElementById('text-edit-input');
+
+  const fontSize = shape
+    ? shape.fontSize * canvas.height * (shape.scale || 1.0)
+    : 0.07 * canvas.height;
+
+  // Position relative to the viewport (input is position:fixed)
+  const canvasR = canvas.getBoundingClientRect();
+  const screenX = canvasR.left + cx * canvas.width;
+  const screenY = canvasR.top  + cy * canvas.height;
+
+  input.value = shape ? shape.text : '';
+  input.style.fontSize   = fontSize + 'px';
+  input.style.color      = shape ? shape.color : '#000000';
+  input.style.left       = screenX + 'px';
+  input.style.top        = (screenY - fontSize * 0.6) + 'px';
+  input.style.width      = '120px';
+
+  input.dataset.cx = cx;
+  input.dataset.cy = cy;
+
+  input.classList.remove('hidden');
+  // Defer focus so the browser finishes processing mousedown before we take focus
+  setTimeout(() => { input.focus(); if (shape) input.select(); }, 0);
+
+  // Grow width as the user types
+  function resize() {
+    input.style.width = '2px';
+    input.style.width = Math.max(120, input.scrollWidth + 16) + 'px';
+  }
+  input.oninput = resize;
+  resize();
+}
+
+function commitTextInput() {
+  const input = document.getElementById('text-edit-input');
+  // Guard: if already hidden, a previous commit already ran (e.g. Enter → blur double-fire)
+  if (input.classList.contains('hidden')) return;
+
+  const text = input.value.trim();
+  // Hide first, then clear value so a blur-triggered second call sees empty string & bails
+  input.classList.add('hidden');
+  input.value = '';
+
+  if (!text) {
+    editingTextShape = null;
+    return;
+  }
+
+  const cx = parseFloat(input.dataset.cx);
+  const cy = parseFloat(input.dataset.cy);
+
+  if (editingTextShape) {
+    editingTextShape.text = text;
+  } else {
+    const shape = {
+      type: 'text',
+      text,
+      cx,
+      cy,
+      color: '#000000',
+      fontSize: 0.07,
+      scale: 1.0,
+    };
+    layers[activeLayer].shape     = shape;
+    layers[activeLayer].animation = null;
+    updateLayerTabs();
+    checkExportReady();
+    setStatus(`Text placed on layer ${activeLayer + 1}. Click it to resize or recolor.`);
+  }
+
+  editingTextShape = null;
+  drawFrame(playheadPct);
+  markUnsaved();
+}
+
+// Wire up commit on Enter / Escape / blur
+const textInput = document.getElementById('text-edit-input');
+textInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); commitTextInput(); }
+  if (e.key === 'Escape') { textInput.classList.add('hidden'); editingTextShape = null; }
+});
+textInput.addEventListener('blur', commitTextInput);
+
+// Double-click to edit existing text shape
+canvas.addEventListener('dblclick', e => {
+  if (appMode !== 'draw') return;
+  const pos   = canvasPos(e);
+  const layer = layers[activeLayer];
+  if (layer.shape && layer.shape.type === 'text' && hitTestShape(layer.shape, pos.x, pos.y)) {
+    openTextInput(layer.shape.cx, layer.shape.cy, layer.shape);
+  }
 });
 
 // ─── RECORDING ────────────────────────────────────────────────────────────────
@@ -1130,7 +1297,7 @@ function redrawGhostIfDrawing(shiftKey) {
 // ─── KEYBOARD SHORTCUTS ───────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'Shift') { redrawGhostIfDrawing(true); return; }
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
   if (e.key === 'r' || e.key === 'R') recBtn.click();
 
@@ -1417,6 +1584,8 @@ function remapCoordsAfterResize(oldW, oldH, newW, newH) {
       } else if (s.type === 'image') {
         s.cx = remapCoord(s.cx, sx); s.cy = remapCoord(s.cy, sy);
         s.w *= sx; s.h *= sy;
+      } else if (s.type === 'text') {
+        s.cx = remapCoord(s.cx, sx); s.cy = remapCoord(s.cy, sy);
       }
     }
     if (layer.animation) {
