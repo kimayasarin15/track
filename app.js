@@ -1162,7 +1162,7 @@ function stopRecording() {
     }));
     layers[activeLayer].animation = norm;
     updateLayerTabs();
-    setStatus(`Motion recorded! ${recordedPath.length} pts · ${recordDuration}s. Press ▶ to play.`);
+    setStatus(`Motion recorded · ${recordDuration}s. Press ▶ to play.`);
     checkExportReady();
     setPlayhead(0);
     drawFrame(0);
