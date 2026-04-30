@@ -679,10 +679,6 @@ canvas.addEventListener('mousedown', e => {
       shapeDragSnap     = snapshotShape(layer.shape);
       shapeDragging     = false;
       shapeDragClientXY = { clientX: e.clientX, clientY: e.clientY };
-    } else {
-      // Record mode — just open inspector
-      const areaR = canvasArea.getBoundingClientRect();
-      openInspector(layer.shape, e.clientX - areaR.left, e.clientY - areaR.top);
     }
     return;
   }
@@ -778,7 +774,7 @@ canvas.addEventListener('mouseup', e => {
   if (shapeDragStart) {
     if (!shapeDragging) {
       const layer = layers[activeLayer];
-      if (layer.shape) {
+      if (layer.shape && appMode === 'draw') {
         const areaR = canvasArea.getBoundingClientRect();
         openInspector(layer.shape, shapeDragClientXY.clientX - areaR.left, shapeDragClientXY.clientY - areaR.top);
       }
@@ -871,9 +867,6 @@ canvas.addEventListener('touchstart', e => {
       shapeDragSnap     = snapshotShape(layer.shape);
       shapeDragging     = false;
       shapeDragClientXY = { clientX: pt.clientX, clientY: pt.clientY };
-    } else {
-      const areaR = canvasArea.getBoundingClientRect();
-      openInspector(layer.shape, pt.clientX - areaR.left, pt.clientY - areaR.top);
     }
     return;
   }
@@ -951,7 +944,7 @@ canvas.addEventListener('touchend', e => {
   if (shapeDragStart) {
     if (!shapeDragging) {
       const layer = layers[activeLayer];
-      if (layer.shape) {
+      if (layer.shape && appMode === 'draw') {
         const areaR = canvasArea.getBoundingClientRect();
         openInspector(layer.shape, shapeDragClientXY.clientX - areaR.left, shapeDragClientXY.clientY - areaR.top);
       }
