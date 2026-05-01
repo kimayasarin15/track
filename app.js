@@ -212,6 +212,61 @@ function drawFrame(pct) {
     }
     drawShape(layer.shape, dx, dy);
   }
+
+  // Draw selection outline around the active layer's shape (only if it has one)
+  const active = layers[activeLayer];
+  if (active && active.shape) {
+    let dx = 0, dy = 0;
+    if (active.animation && active.animation.length > 0) {
+      const centre = shapeCentre(active.shape);
+      const pos = getPositionAtTime(active.animation, t);
+      if (pos) { dx = (pos.x - centre.x) * canvas.width; dy = (pos.y - centre.y) * canvas.height; }
+    }
+    drawSelectionOutline(active.shape, dx, dy);
+  }
+}
+
+function drawSelectionOutline(shape, dx = 0, dy = 0) {
+  const W = canvas.width, H = canvas.height;
+  const PAD = 6;
+  ctx.save();
+  ctx.strokeStyle = '#4a6cf7';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([5, 4]);
+  ctx.globalAlpha = 0.6;
+
+  let x, y, w, h;
+  if (shape.type === 'rect') {
+    x = Math.min(shape.x1, shape.x2) * W + dx - PAD;
+    y = Math.min(shape.y1, shape.y2) * H + dy - PAD;
+    w = Math.abs(shape.x2 - shape.x1) * W + PAD * 2;
+    h = Math.abs(shape.y2 - shape.y1) * H + PAD * 2;
+  } else if (shape.type === 'circle') {
+    const r = shape.r * Math.min(W, H) + PAD;
+    x = shape.cx * W + dx - r;
+    y = shape.cy * H + dy - r;
+    w = r * 2; h = r * 2;
+  } else if (shape.type === 'line') {
+    x = Math.min(shape.x1, shape.x2) * W + dx - PAD;
+    y = Math.min(shape.y1, shape.y2) * H + dy - PAD;
+    w = Math.abs(shape.x2 - shape.x1) * W + PAD * 2;
+    h = Math.abs(shape.y2 - shape.y1) * H + PAD * 2;
+  } else if (shape.type === 'image') {
+    const iw = shape.w * W * (shape.scale || 1);
+    const ih = shape.h * H * (shape.scale || 1);
+    x = shape.cx * W + dx - iw / 2 - PAD;
+    y = shape.cy * H + dy - ih / 2 - PAD;
+    w = iw + PAD * 2; h = ih + PAD * 2;
+  } else if (shape.type === 'text') {
+    const fs = shape.fontSize * Math.min(W, H) * (shape.scale || 1);
+    const approxW = shape.text.length * fs * 0.55;
+    x = shape.cx * W + dx - approxW / 2 - PAD;
+    y = shape.cy * H + dy - fs - PAD;
+    w = approxW + PAD * 2; h = fs * 1.4 + PAD * 2;
+  }
+
+  if (w !== undefined) ctx.strokeRect(x, y, w, h);
+  ctx.restore();
 }
 
 // ─── DELETE BUTTON ────────────────────────────────────────────────────────────
@@ -384,6 +439,7 @@ function attachTabListeners(tab) {
     if (isRecording || isDrawing) return;
     activeLayer = parseInt(tab.dataset.layer);
     updateLayerTabs();
+    drawFrame(playheadPct);
     setStatus(`${layerLabel(activeLayer)} selected.`);
   });
 
