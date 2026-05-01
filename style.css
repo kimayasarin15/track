@@ -97,6 +97,31 @@
     pointer-events: none;
   }
 
+  /* Toolbar size slider */
+  #toolbar-size-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.35;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+  #toolbar-size-wrap.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #toolbar-size {
+    width: 120px;
+    accent-color: #888;
+    cursor: pointer;
+  }
+  #toolbar-size-val {
+    font-family: var(--font);
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 32px;
+  }
+
   /* Size selector */
   #size-select {
     background: var(--btn-bg);

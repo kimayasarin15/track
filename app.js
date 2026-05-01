@@ -369,11 +369,50 @@ document.getElementById('image-input').addEventListener('change', e => {
 });
 
 
-const colorInput = document.getElementById('color-input');
+const colorInput  = document.getElementById('color-input');
 const colorPreview = document.getElementById('color-preview');
+const toolbarSizeWrap = document.getElementById('toolbar-size-wrap');
+const toolbarSize    = document.getElementById('toolbar-size');
+const toolbarSizeVal = document.getElementById('toolbar-size-val');
+
+// Sync toolbar colour + size controls to reflect the active layer's shape.
+// Called whenever the active layer changes or a shape is placed/modified.
+function syncToolbarToLayer() {
+  const shape = layers[activeLayer] && layers[activeLayer].shape;
+  if (!shape || appMode !== 'draw') {
+    toolbarSizeWrap.classList.remove('active');
+    return;
+  }
+  toolbarSizeWrap.classList.add('active');
+  if (shape.type !== 'image') {
+    colorInput.value = shape.color;
+    colorPreview.style.background = shape.color;
+  }
+  const pct = Math.round((shape.scale || 1) * 100);
+  toolbarSize.value = pct;
+  toolbarSizeVal.textContent = pct + '%';
+}
+
 colorInput.addEventListener('input', e => {
   currentColor = e.target.value;
   colorPreview.style.background = currentColor;
+  if (appMode !== 'draw') return;
+  const shape = layers[activeLayer] && layers[activeLayer].shape;
+  if (shape && shape.type !== 'image') {
+    shape.color = e.target.value;
+    drawFrame(playheadPct);
+    markUnsaved();
+  }
+});
+
+toolbarSize.addEventListener('input', e => {
+  toolbarSizeVal.textContent = e.target.value + '%';
+  if (appMode !== 'draw') return;
+  const shape = layers[activeLayer] && layers[activeLayer].shape;
+  if (!shape) return;
+  applyScale(shape, parseInt(e.target.value) / 100);
+  drawFrame(playheadPct);
+  markUnsaved();
 });
 
 function updateCursor() {
@@ -409,6 +448,7 @@ function setAppMode(mode) {
     setStatus('Record mode — press REC to record motion and move your mouse on the trackpad');
   }
   updateCursor();
+  syncToolbarToLayer();
 }
 
 // ─── LAYER TABS ───────────────────────────────────────────────────────────────
@@ -429,6 +469,7 @@ function updateLayerTabs() {
     else if (layer && layer.shape) tab.classList.add('has-shape');
     tab.textContent = layerLabel(i);
   });
+  syncToolbarToLayer();
 }
 
 // ─── LAYER DRAG-TO-REORDER ────────────────────────────────────────────────────
@@ -858,13 +899,7 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('mouseup', e => {
   // ── Finish shape drag / treat as click ──
   if (shapeDragStart) {
-    if (!shapeDragging) {
-      const layer = layers[activeLayer];
-      if (layer.shape && appMode === 'draw') {
-        const areaR = canvasArea.getBoundingClientRect();
-        openInspector(layer.shape, shapeDragClientXY.clientX - areaR.left, shapeDragClientXY.clientY - areaR.top);
-      }
-    } else {
+    if (shapeDragging) {
       // Shape was moved — persist the new position
       markUnsaved();
     }
@@ -1028,15 +1063,7 @@ let lastTapTime = 0;
 canvas.addEventListener('touchend', e => {
   e.preventDefault();
   if (shapeDragStart) {
-    if (!shapeDragging) {
-      const layer = layers[activeLayer];
-      if (layer.shape && appMode === 'draw') {
-        const areaR = canvasArea.getBoundingClientRect();
-        openInspector(layer.shape, shapeDragClientXY.clientX - areaR.left, shapeDragClientXY.clientY - areaR.top);
-      }
-    } else {
-      markUnsaved();
-    }
+    if (shapeDragging) markUnsaved();
     shapeDragStart = shapeDragSnap = shapeDragClientXY = null;
     shapeDragging = false;
     return;
