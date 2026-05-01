@@ -143,6 +143,7 @@
       </svg>
     </button>
     <button id="save-btn" title="Save project (⌘S)">SAVE</button>
+    <button id="reset-btn">RESET</button>
     <button id="export-btn" disabled>
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M7 1v8M4 6l3 3 3-3M2 10v2h10v-2" stroke="#ccc" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -265,6 +266,18 @@
       <div id="help-actions">
         <button id="help-next">NEXT →</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div id="reset-modal">
+  <div id="reset-modal-box">
+    <div id="reset-modal-title">RESET CANVAS</div>
+    <p id="reset-modal-msg">Are you sure you want to reset the canvas? Any progress saved will be lost.</p>
+    <div id="reset-modal-footer">
+      <button id="reset-modal-cancel">CANCEL</button>
+      <button id="reset-modal-confirm">RESET</button>
     </div>
   </div>
 </div>

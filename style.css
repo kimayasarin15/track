@@ -570,10 +570,9 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: #888;
-    font-family: 'IBM Plex Mono', 'Courier New', monospace;
-    font-size: 9px;
-    letter-spacing: 0.08em;
-    padding: 0 10px;
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 0 14px;
     height: 36px;
     cursor: pointer;
     display: flex; align-items: center;
@@ -894,6 +893,96 @@
     transition: all 0.15s;
   }
   #canvas-modal-save:hover { background: rgba(74,108,247,0.25); border-color: rgba(74,108,247,0.8); color: #a0b8ff; }
+
+  /* ─── RESET BUTTON ─────────────────────────────────────────────────────── */
+  #reset-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: #888;
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 0 14px;
+    height: 36px;
+    cursor: pointer;
+    display: flex; align-items: center;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  #reset-btn:hover { background: var(--btn-active); border-color: #666; color: #ccc; }
+
+  /* ─── RESET CONFIRMATION MODAL ──────────────────────────────────────────── */
+  #reset-modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #reset-modal.visible { display: flex; }
+
+  #reset-modal-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px 28px 24px;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  }
+
+  #reset-modal-title {
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+
+  #reset-modal-msg {
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  #reset-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  #reset-modal-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #reset-modal-cancel:hover { border-color: #666; color: var(--text); background: var(--btn-active); }
+
+  #reset-modal-confirm {
+    background: rgba(74,108,247,0.15);
+    border: 1px solid rgba(74,108,247,0.5);
+    border-radius: 6px;
+    color: #7b9fff;
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #reset-modal-confirm:hover { background: rgba(74,108,247,0.25); border-color: rgba(74,108,247,0.8); color: #a0b8ff; }
 
   /* ─── TEXT EDIT OVERLAY ─────────────────────────────────────────────────── */
   #text-edit-input {

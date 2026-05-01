@@ -231,8 +231,8 @@ function drawSelectionOutline(shape, dx = 0, dy = 0) {
   const PAD = 6;
   ctx.save();
   ctx.strokeStyle = '#4a6cf7';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([5, 4]);
+  ctx.lineWidth = 0.75;
+  ctx.setLineDash([4, 4]);
   ctx.globalAlpha = 0.6;
 
   let x, y, w, h;
@@ -1255,20 +1255,19 @@ function stopRecording() {
   canvas.style.cursor = 'crosshair';
 
   if (recordedPath.length > 1) {
-    const t0   = recordedPath[0].t;
-    const tEnd = recordedPath[recordedPath.length-1].t - t0;
-    const dur  = tEnd > 0 ? tEnd : 1;
+    const t0 = recordedPath[0].t;
+    const actualDur = (recordedPath[recordedPath.length-1].t - t0).toFixed(1);
     // Offset so the first point maps to the shape's current centre → no jump at t=0
     const centre = shapeCentre(layers[activeLayer].shape);
     const xOff = centre.x - recordedPath[0].x;
     const yOff = centre.y - recordedPath[0].y;
     const norm = recordedPath.map(p => ({
-      t: (p.t - t0) / dur * recordDuration,
+      t: p.t - t0,
       x: p.x + xOff, y: p.y + yOff,
     }));
     layers[activeLayer].animation = norm;
     updateLayerTabs();
-    setStatus(`Motion recorded · ${recordDuration}s. Press ▶ to play.`);
+    setStatus(`Motion recorded · ${actualDur}s. Press ▶ to play.`);
     checkExportReady();
     setPlayhead(0);
     drawFrame(0);
@@ -1739,6 +1738,56 @@ canvasModal.addEventListener('mousedown', e => {
 // Initialise preview swatch
 applyBgPreview(canvasBgColor);
 
+// ─── RESET ────────────────────────────────────────────────────────────────────
+const resetModal = document.getElementById('reset-modal');
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  resetModal.classList.add('visible');
+});
+
+document.getElementById('reset-modal-cancel').addEventListener('click', () => {
+  resetModal.classList.remove('visible');
+});
+
+resetModal.addEventListener('mousedown', e => {
+  if (e.target === resetModal) resetModal.classList.remove('visible');
+});
+
+document.getElementById('reset-modal-confirm').addEventListener('click', () => {
+  resetModal.classList.remove('visible');
+  localStorage.removeItem(STORAGE_KEY);
+
+  // Reset all state to defaults
+  layers = [{ shape: null, animation: null }];
+  activeLayer = 0;
+  canvasRatio = '16:9';
+  canvasBgColor = '#ffffff';
+  recordDuration = 5;
+  document.getElementById('duration-select').value = 5;
+  hasUnsaved = false;
+  saveBtn.classList.remove('unsaved', 'saved-flash');
+  saveBtn.textContent = 'SAVE';
+
+  // Rebuild layer tabs
+  const row = document.getElementById('layer-row');
+  const addBtn = document.getElementById('add-layer-btn');
+  document.querySelectorAll('.layer-tab').forEach(t => t.remove());
+  const tab = document.createElement('button');
+  tab.className = 'layer-tab';
+  tab.dataset.layer = 0;
+  tab.textContent = layerLabel(0);
+  attachTabListeners(tab);
+  row.insertBefore(tab, addBtn);
+
+  applyBgPreview(canvasBgColor);
+  resizeCanvas();
+  updateLayerTabs();
+  checkExportReady();
+  syncToolbarToLayer();
+  setAppMode('draw');
+  setStatus('Canvas reset.');
+});
+
 // ─── SERVICE WORKER ───────────────────────────────────────────────────────────
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
@@ -1932,3 +1981,6 @@ loadState();
 
 // Ensure no tool button is highlighted on load
 document.querySelectorAll('.tool-btn[id^="tool-"]').forEach(b => b.classList.remove('active'));
+
+// Always open the help modal on load
+openHelp();
