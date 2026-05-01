@@ -1322,6 +1322,12 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Shift') { redrawGhostIfDrawing(true); return; }
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
+  if (e.key === ' ') {
+    e.preventDefault();
+    if (appMode === 'record' && !isRecording) playBtn.click();
+    return;
+  }
+
   if (e.key === 'r' || e.key === 'R') recBtn.click();
 
   if ((e.key === 'l' || e.key === 'L') && appMode === 'draw') {

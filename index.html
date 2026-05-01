@@ -42,8 +42,8 @@
   <div class="toolbar-sep"></div>
 
   <div id="mode-btns">
-    <button id="btn-draw" class="mode-btn active">DRAW</button>
-    <button id="btn-record" class="mode-btn">RECORD</button>
+    <button id="btn-draw" class="mode-btn active">DRAW MODE</button>
+    <button id="btn-record" class="mode-btn">RECORD MODE</button>
   </div>
 
   <div class="toolbar-sep"></div>
@@ -96,6 +96,12 @@
 
   <!-- Record tools (visible in record mode only) -->
   <div id="record-tools" class="hidden">
+    <button class="ctrl-btn rec-btn" id="rec-btn" title="Record">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <circle cx="5" cy="5" r="4" fill="var(--accent)"/>
+      </svg>
+      <span class="rec-btn-label">PRESS R</span>
+    </button>
     <select id="duration-select">
       <option value="3">3s</option>
       <option value="5" selected>5s</option>
@@ -112,12 +118,6 @@
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <rect x="2" y="2" width="10" height="10" rx="1" fill="#ccc"/>
       </svg>
-    </button>
-    <button class="ctrl-btn rec-btn" id="rec-btn" title="Record">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <circle cx="5" cy="5" r="4" fill="var(--accent)"/>
-      </svg>
-      <span class="rec-btn-label">PRESS R</span>
     </button>
     <div class="toolbar-sep"></div>
     <button class="tool-btn delete-btn" title="Delete">
