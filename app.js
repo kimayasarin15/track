@@ -1484,10 +1484,11 @@ exportBtn.addEventListener('click', async () => {
   modalStatus.textContent = '';
 
   const W = canvas.width, H = canvas.height;
+  const EW = W * 2, EH = H * 2;
   const totalFrames = Math.round(recordDuration * FPS);
 
   const offCanvas = document.createElement('canvas');
-  offCanvas.width = W; offCanvas.height = H;
+  offCanvas.width = EW; offCanvas.height = EH;
   const offCtx = offCanvas.getContext('2d');
 
   const stream = offCanvas.captureStream(FPS);
@@ -1502,9 +1503,9 @@ exportBtn.addEventListener('click', async () => {
     const pct = f / totalFrames;
     const t = pct * recordDuration;
 
-    offCtx.clearRect(0, 0, W, H);
+    offCtx.clearRect(0, 0, EW, EH);
     offCtx.fillStyle = canvasBgColor;
-    offCtx.fillRect(0, 0, W, H);
+    offCtx.fillRect(0, 0, EW, EH);
 
     for (let i = 0; i < layers.length; i++) {
       const layer = layers[i];
@@ -1514,11 +1515,11 @@ exportBtn.addEventListener('click', async () => {
         const centre = shapeCentre(layer.shape);
         const pos = getPositionAtTime(layer.animation, t);
         if (pos) {
-          dx = (pos.x - centre.x) * W;
-          dy = (pos.y - centre.y) * H;
+          dx = (pos.x - centre.x) * EW;
+          dy = (pos.y - centre.y) * EH;
         }
       }
-      drawShapeCtx(offCtx, layer.shape, W, H, dx, dy);
+      drawShapeCtx(offCtx, layer.shape, EW, EH, dx, dy);
     }
 
     modalProgress.style.width = (pct * 100) + '%';
