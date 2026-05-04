@@ -1557,7 +1557,7 @@ const HELP_STEPS = [
   },
   {
     title: 'Edit',
-    body: 'When a layer is selected, you can click on the object to change its size and color where applicable.',
+    body: 'When a layer is selected, you can change its size and color from the top toolbar.',
   },
   {
     title: 'Record',
