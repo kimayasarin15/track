@@ -1,7 +1,7 @@
 {
-  "name": "Track",
-  "short_name": "Track",
-  "description": "Movement based animation tool",
+  "name": "wiggle",
+  "short_name": "wiggle",
+  "description": "Trackpad based animation tool",
   "start_url": ".",
   "display": "standalone",
   "orientation": "any",
