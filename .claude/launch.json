@@ -4,7 +4,7 @@
     {
       "name": "track",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8765"],
+      "runtimeArgs": ["-m", "http.server", "8765", "-d", "/Users/kimayasarin/Desktop/MPSCD/Major Studio 2/CAPSTONE/wiggle"],
       "port": 8765
     }
   ]

@@ -37,6 +37,12 @@
     /* State */
     --color-saved: #5a9e6f;
 
+    /* Mode toggle pills */
+    --toggle-draw-bg: #2f344a;
+    --toggle-draw-color: #577bde;
+    --toggle-animate-bg: #452e2c;
+    --toggle-animate-color: #ff4848;
+
     /* Buttons */
     --btn-bg: #3a3a3a;
     --btn-active: #4a4a4a;
@@ -390,17 +396,20 @@
   }
   #timeline-head:active { cursor: grabbing; }
 
-  /* Mode buttons */
+  /* Mode toggle */
   #mode-btns {
     display: flex;
-    align-items: center;
-    gap: 4px;
+    align-items: stretch;
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    gap: 0;
   }
 
   .mode-btn {
     height: 36px;
-    padding: 0 14px;
-    border-radius: 6px;
+    padding: 0 16px;
+    border-radius: 9px;
     font-family: var(--font);
     font-size: 11px;
     font-weight: 500;
@@ -408,29 +417,26 @@
     cursor: pointer;
     transition: all 0.18s ease;
     white-space: nowrap;
-    /* inactive / greyed state */
-    background: var(--btn-bg);
-    border: 1px solid var(--border);
+    background: transparent;
+    border: 1px solid transparent;
     color: var(--text-dim);
   }
   .mode-btn:hover:not(.active):not(:disabled) {
-    background: var(--btn-active);
-    border-color: var(--border-hover);
     color: var(--text);
   }
 
   /* DRAW active */
   #btn-draw.active {
-    border: 1.5px solid rgba(var(--accent-blue-rgb), 0.6);
-    background: rgba(var(--accent-blue-rgb), 0.15);
-    color: var(--accent-blue-light);
+    background: var(--toggle-draw-bg);
+    border-color: var(--toggle-draw-color);
+    color: var(--toggle-draw-color);
   }
 
-  /* RECORD active */
+  /* ANIMATE active */
   #btn-record.active {
-    border: 1.5px solid rgba(var(--accent-rgb), 0.6);
-    background: rgba(var(--accent-rgb), 0.12);
-    color: var(--accent-light);
+    background: var(--toggle-animate-bg);
+    border-color: var(--toggle-animate-color);
+    color: var(--toggle-animate-color);
   }
 
   .mode-btn:disabled {
