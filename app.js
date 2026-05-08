@@ -1580,7 +1580,11 @@ const HELP_STEPS = [
   },
   {
     title: 'Animate',
-    body: 'Press the animate button to switch to animate mode. To animate a shape hit the REC button (or press <strong>R</strong>), then move your cursor across the canvas; objects will move from their center point. Recording stops automatically when the set duration runs out. You can edit the duration at anytime.',
+    body: 'Press the animate button to switch to animate mode. To animate a shape hit the REC button (or press <strong>R</strong>), then move your cursor across the canvas; objects will move from their center point. You can edit the duration at anytime.',
+  },
+  {
+    title: 'Axis-lock',
+    body: 'While recording, hold Shift to lock movement to a single axis, horizontal or vertical, based on your initial direction.',
   },
   {
     title: 'Playback',
