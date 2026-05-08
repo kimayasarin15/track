@@ -386,6 +386,7 @@ document.getElementById('image-input').addEventListener('change', e => {
         w = 0.4 * aspect * (canvas.height / canvas.width);
       }
       const shape = { type: 'image', img, cx: 0.5, cy: 0.5, w, h, scale: 1.0 };
+      ensureLayerForNewShape();
       layers[activeLayer].shape = shape;
       layers[activeLayer].animation = null;
       updateLayerTabs();
@@ -615,6 +616,10 @@ function autoAdvanceLayer() {
   row.insertBefore(tab, addBtn);
   activeLayer = layers.length - 1;
   updateLayerTabs();
+}
+
+function ensureLayerForNewShape() {
+  if (layers[activeLayer].shape) autoAdvanceLayer();
 }
 
 // ─── SHAPE HIT TEST ───────────────────────────────────────────────────────────
@@ -954,6 +959,7 @@ canvas.addEventListener('mouseup', e => {
                     Math.abs(shape.y2 - shape.y1) * canvas.height < 4);
   if (tooSmall) { drawFrame(playheadPct); return; }
 
+  ensureLayerForNewShape();
   layers[activeLayer].shape = shape;
   layers[activeLayer].animation = null;
   updateLayerTabs();
@@ -975,6 +981,7 @@ canvas.addEventListener('mouseleave', e => {
     const shape = buildShapeFromDrag(drawStart || end, end);
     drawStart = null;
     if (shape) {
+      ensureLayerForNewShape();
       layers[activeLayer].shape = shape;
       layers[activeLayer].animation = null;
       updateLayerTabs();
@@ -1128,6 +1135,7 @@ canvas.addEventListener('touchend', e => {
                                 Math.abs(shape.y2 - shape.y1) * canvas.height < 4);
   if (tooSmall) { drawFrame(playheadPct); return; }
 
+  ensureLayerForNewShape();
   layers[activeLayer].shape     = shape;
   layers[activeLayer].animation = null;
   updateLayerTabs();
@@ -1214,6 +1222,7 @@ function commitTextInput() {
       fontSize: 0.07,
       scale: 1.0,
     };
+    ensureLayerForNewShape();
     layers[activeLayer].shape     = shape;
     layers[activeLayer].animation = null;
     updateLayerTabs();
