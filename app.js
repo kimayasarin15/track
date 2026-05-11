@@ -304,7 +304,18 @@ function drawSelectionOutline(shape, dx = 0, dy = 0) {
 function doDelete() {
   if (isRecording || isPlaying || isDrawing) return;
   const layer = layers[activeLayer];
-  if (!layer.animation && !layer.shape) return;
+  if (!layer.animation && !layer.shape) {
+    if (layers.length === 1) return; // keep at least one layer
+    const tabs = [...document.querySelectorAll('.layer-tab')];
+    layers.splice(activeLayer, 1);
+    tabs[activeLayer].remove();
+    activeLayer = Math.min(activeLayer, layers.length - 1);
+    updateLayerTabs();
+    drawFrame(playheadPct);
+    setStatus('Empty layer removed.');
+    markUnsaved();
+    return;
+  }
 
   if (layer.animation) {
     // First delete: clear animation only, keep the shape
