@@ -294,8 +294,8 @@
   .layer-tab.active { border-color: var(--toggle-draw-color); color: var(--toggle-draw-color); background: var(--toggle-draw-bg); }
   .layer-tab.has-shape { border-color: var(--accent-blue); color: var(--text); }
   .layer-tab.has-animation { border-color: var(--accent); color: var(--text); }
-  .layer-tab.active.has-shape,
-  .layer-tab.active.has-animation { color: var(--toggle-draw-color); }
+  .layer-tab.active.has-shape { color: var(--toggle-draw-color); }
+  .layer-tab.active.has-animation { border-color: var(--toggle-animate-color); color: var(--toggle-animate-color); background: var(--toggle-animate-bg); }
   .layer-tab.dragging { opacity: 0.35; cursor: grabbing; }
   .layer-tab.drag-over { border-color: var(--accent-blue); background: rgba(var(--accent-blue-rgb), 0.2); }
   .layer-tab[draggable="true"] { cursor: grab; }
