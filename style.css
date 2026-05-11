@@ -235,13 +235,13 @@
   /* Status bar */
   #status {
       position: absolute;
-      bottom: 12px;
-      left: 12px;
+      bottom: 6px;
+      left: 15px;
       font-family: var(--font);
       font-size: 11px;
       color: var(--text-dim);
       pointer-events: none;
-      max-width: 200px;
+      max-width: 1000px;
       line-height: 1.4;
       word-break: break-word;
   }

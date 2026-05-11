@@ -312,7 +312,7 @@ function doDelete() {
     updateLayerTabs();
     drawFrame(playheadPct);
     checkExportReady();
-    setStatus(`Animation cleared from ${layerLabel(activeLayer)}. Delete again to remove the layer.`);
+    setStatus(`Animation cleared from ${layerLabel(activeLayer)}. Delete again to remove the object.`);
     markUnsaved();
   } else if (layer.shape) {
     if (layers.length === 1) {
@@ -392,7 +392,7 @@ document.getElementById('image-input').addEventListener('change', e => {
       updateLayerTabs();
       drawFrame(playheadPct);
       checkExportReady();
-      setStatus(`Image placed on layer ${activeLayer + 1}. Click it to resize.`);
+      setStatus(`Image placed on canvas ${activeLayer + 1}. Resize from top toolbar.`);
       markUnsaved();
     };
     img.src = re.target.result;
@@ -475,9 +475,9 @@ function setAppMode(mode) {
   if (mode === 'draw') {
     currentTool = null;
     document.querySelectorAll('.tool-btn[id^="tool-"]').forEach(b => b.classList.remove('active'));
-    setStatus('Draw mode — add an image, text or shape to the canvas, or click an layer to edit it');
+    setStatus('Draw — add an image, text or shape to the canvas, edit objects from top toolbar');
   } else {
-    setStatus('Record mode — press REC to record motion and move your mouse on the trackpad');
+    setStatus('Animate — press REC to record motion and move your mouse on the trackpad');
   }
   updateCursor();
   syncToolbarToLayer();
@@ -965,7 +965,7 @@ canvas.addEventListener('mouseup', e => {
   updateLayerTabs();
   drawFrame(playheadPct);
   checkExportReady();
-  setStatus(`${layerLabel(activeLayer)} drawn. Click it to change color or size.`);
+  setStatus(`${layerLabel(activeLayer)} drawn. Change color or size from top toolbar.`);
   markUnsaved();
 });
 
@@ -1141,7 +1141,7 @@ canvas.addEventListener('touchend', e => {
   updateLayerTabs();
   drawFrame(playheadPct);
   checkExportReady();
-  setStatus(`${layerLabel(activeLayer)} drawn. Tap it to edit, then switch to Record mode to animate.`);
+  setStatus(`${layerLabel(activeLayer)} drawn. Edit from top toolbar.`);
   markUnsaved();
 }, { passive: false });
 
@@ -1227,7 +1227,7 @@ function commitTextInput() {
     layers[activeLayer].animation = null;
     updateLayerTabs();
     checkExportReady();
-    setStatus(`Text placed on layer ${activeLayer + 1}. Click it to resize or recolor.`);
+    setStatus(`Text placed on layer ${activeLayer + 1}. Change color or size from top toolbar.`);
   }
 
   editingTextShape = null;
@@ -1261,7 +1261,7 @@ const recTimerEl = document.getElementById('rec-timer');
 recBtn.addEventListener('click', () => {
   if (isPlaying || isDrawing) return;
   if (!layers[activeLayer].shape) {
-    setStatus('Draw a shape on this layer first!');
+    setStatus('Draw a shape on this layer first');
     setAppMode('draw');
     return;
   }
@@ -1309,7 +1309,7 @@ function stopRecording() {
     }));
     layers[activeLayer].animation = norm;
     updateLayerTabs();
-    setStatus(`Motion recorded · ${actualDur}s. Press ▶ to play.`);
+    setStatus(`Motion recorded · ${actualDur}s. Press ▶ or SPACE to play.`);
     checkExportReady();
     setPlayhead(0);
     drawFrame(0);
@@ -1955,20 +1955,17 @@ document.addEventListener('keydown', e => {
     setStatus(`${layerLabel(activeLayer)} copied. Press ⌘V to paste into a new layer.`);
   }
 
-  // ⌘V — paste into the currently selected layer (only if empty)
+  // ⌘V — paste into a new layer if the current one is occupied
   if (e.key === 'v' && appMode === 'draw') {
     if (!copiedShape) return;
-    if (layers[activeLayer].shape) {
-      setStatus(`${layerLabel(activeLayer)} already has a shape — clear it first before pasting.`);
-      return;
-    }
     e.preventDefault();
+    ensureLayerForNewShape();
     layers[activeLayer].shape = { ...copiedShape };
     updateLayerTabs();
     drawFrame(playheadPct);
     checkExportReady();
     markUnsaved();
-    setStatus(`Pasted into ${layerLabel(activeLayer)}.`);
+    setStatus(`Pasted onto ${layerLabel(activeLayer)}.`);
   }
 });
 
