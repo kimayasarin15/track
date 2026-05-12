@@ -71,6 +71,28 @@
     user-select: none;
   }
 
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: #111111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+  }
+
+ #splash.fade-out {
+  opacity: 0;
+  }
+  
+  #splash-video {
+    width: 800px;
+    height: auto;
+  }
+
   #toolbar-logo {
     display: flex;
     align-items: center;

@@ -1,3 +1,19 @@
+// ─── SPLASH SCREEN ────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  const splash = document.getElementById('splash');
+  const video  = document.getElementById('splash-video');
+  let dismissed = false;
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+    splash.classList.add('fade-out');
+    setTimeout(() => splash.remove(), 700);
+  };
+  video.addEventListener('ended', dismiss, { once: true });
+  video.addEventListener('error', dismiss, { once: true });
+  setTimeout(dismiss, 6000);
+});
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const MAX_LAYERS = 15;
 const FPS = 30;
