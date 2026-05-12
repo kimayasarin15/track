@@ -71,6 +71,15 @@
     user-select: none;
   }
 
+  #toolbar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
   /* TOP TOOLBAR */
   #toolbar {
     background: var(--panel);
