@@ -1644,7 +1644,7 @@ const HELP_STEPS = [
   },
   {
     title: 'Save & Export',
-    body: 'Saving stores your draft in your browser locally, so it will not survive a hard refresh or incognito mode. Export any completed projects to make sure you do not lose any work, it will downlaod as a WebM file.',
+    body: 'Saving stores your draft in your browser locally, so it will not survive a hard refresh or incognito mode. Export any completed projects to make sure you do not lose any work, it will download as a WebM file.',
   },
 ];
 
