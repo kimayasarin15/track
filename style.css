@@ -1097,6 +1097,14 @@
     }
     #toolbar::-webkit-scrollbar { display: none; }
 
+    /* Layer row scrolls horizontally on mobile */
+    #layer-row {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    #layer-row::-webkit-scrollbar { display: none; }
+
     /* Slightly larger touch targets */
     .tool-btn,
     #color-btn,
